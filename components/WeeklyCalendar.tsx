@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { addWeeks, subWeeks, format, isSameDay, parseISO, getISOWeek, startOfWeek, endOfWeek } from 'date-fns'
 import { da } from 'date-fns/locale'
-import { ChevronLeft, ChevronRight, Plus } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Plus, Share2, Loader2, Bell, BellOff } from 'lucide-react'
 import type { CalendarEvent, FamilyMember, ManagedMember } from '@/lib/types'
 import EventPill from './EventPill'
 import EventSheet from './EventSheet'
@@ -68,6 +68,9 @@ export default function WeeklyCalendar({
   const [weather, setWeather] = useState<Record<string, WeatherData>>({})
   const [touchStartX, setTouchStartX] = useState<number | null>(null)
   const [touchStartY, setTouchStartY] = useState<number | null>(null)
+  const [sharing, setSharing] = useState(false)
+  const [notifState, setNotifState] = useState<'unknown' | 'subscribed' | 'denied' | 'unsupported'>('unknown')
+  const weekGridRef = useRef<HTMLDivElement>(null)
 
   const isAdmin = members.find((m) => m.id === currentUserId)?.role === 'admin'
   const membersById = new Map(members.map((m) => [m.id, m]))
@@ -221,6 +224,79 @@ export default function WeeklyCalendar({
     setTouchStartY(null)
   }
 
+  // Check push notification status on mount
+  useEffect(() => {
+    if (!('Notification' in window) || !('serviceWorker' in navigator)) {
+      setNotifState('unsupported')
+      return
+    }
+    if (Notification.permission === 'denied') { setNotifState('denied'); return }
+    navigator.serviceWorker.ready.then((reg) =>
+      reg.pushManager.getSubscription().then((sub) => {
+        setNotifState(sub ? 'subscribed' : 'unknown')
+      })
+    ).catch(() => setNotifState('unsupported'))
+  }, [])
+
+  async function handleNotification() {
+    if (notifState === 'subscribed') {
+      // Unsubscribe
+      const reg = await navigator.serviceWorker.ready
+      const sub = await reg.pushManager.getSubscription()
+      if (sub) {
+        await sub.unsubscribe()
+        await fetch('/api/push/subscribe', { method: 'DELETE' })
+      }
+      setNotifState('unknown')
+      return
+    }
+    const permission = await Notification.requestPermission()
+    if (permission !== 'granted') { setNotifState('denied'); return }
+
+    const reg = await navigator.serviceWorker.ready
+    const sub = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      applicationServerKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY as any,
+    })
+    await fetch('/api/push/subscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(sub.toJSON()),
+    })
+    setNotifState('subscribed')
+  }
+
+  async function handleShare() {
+    if (!weekGridRef.current) return
+    setSharing(true)
+    try {
+      const html2canvas = (await import('html2canvas')).default
+      const canvas = await html2canvas(weekGridRef.current, {
+        scale: 2,
+        backgroundColor: '#f9fafb',
+        useCORS: true,
+        logging: false,
+      })
+      const blob = await new Promise<Blob>((resolve) => canvas.toBlob((b) => resolve(b!), 'image/png'))
+      const file = new File([blob], `uge-${weekNumber}.png`, { type: 'image/png' })
+      if (navigator.share && navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file], title: `Familiekalender — Uge ${weekNumber}` })
+      } else {
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `uge-${weekNumber}.png`
+        a.click()
+        URL.revokeObjectURL(url)
+      }
+    } catch {
+      // Share cancelled or failed — no-op
+    } finally {
+      setSharing(false)
+    }
+  }
+
   function isForPerson(event: CalendarEvent, personId: string): boolean {
     if (event.participants?.length) {
       return event.participants.some((p) => p.id === personId)
@@ -257,23 +333,60 @@ export default function WeeklyCalendar({
         >
           <ChevronLeft size={20} className="text-gray-600" />
         </button>
-        <div className="text-center">
+
+        <div className="text-center flex-1">
           <span className="text-xs font-semibold text-indigo-600 uppercase tracking-widest block">
             Uge {weekNumber}
           </span>
           <h1 className="text-lg font-bold text-gray-900 leading-tight">{weekLabel}</h1>
+          {weekOffset !== 0 && (
+            <button
+              onClick={() => setWeekOffset(0)}
+              className="mt-0.5 text-xs text-indigo-600 font-semibold bg-indigo-50 px-2.5 py-0.5 rounded-full hover:bg-indigo-100 transition-colors inline-block"
+            >
+              I dag ↑
+            </button>
+          )}
         </div>
-        <button
-          onClick={() => setWeekOffset((o) => o + 1)}
-          className="p-2 rounded-full hover:bg-gray-200 transition-colors"
-          aria-label="Næste uge"
-        >
-          <ChevronRight size={20} className="text-gray-600" />
-        </button>
+
+        <div className="flex items-center gap-0.5">
+          {notifState !== 'unsupported' && (
+            <button
+              onClick={handleNotification}
+              title={notifState === 'subscribed' ? 'Slå notifikationer fra' : 'Aktiver notifikationer'}
+              className="p-2 rounded-full hover:bg-gray-200 transition-colors"
+              aria-label="Notifikationer"
+            >
+              {notifState === 'subscribed'
+                ? <Bell size={18} className="text-indigo-600" />
+                : <BellOff size={18} className="text-gray-400" />
+              }
+            </button>
+          )}
+          <button
+            onClick={handleShare}
+            disabled={sharing}
+            className="p-2 rounded-full hover:bg-gray-200 transition-colors disabled:opacity-40"
+            aria-label="Del uge som billede"
+          >
+            {sharing
+              ? <Loader2 size={18} className="text-gray-500 animate-spin" />
+              : <Share2 size={18} className="text-gray-500" />
+            }
+          </button>
+          <button
+            onClick={() => setWeekOffset((o) => o + 1)}
+            className="p-2 rounded-full hover:bg-gray-200 transition-colors"
+            aria-label="Næste uge"
+          >
+            <ChevronRight size={20} className="text-gray-600" />
+          </button>
+        </div>
       </div>
 
       {/* Day columns */}
       <div
+        ref={weekGridRef}
         className={`grid grid-cols-7 gap-1 transition-opacity duration-150 ${loading ? 'opacity-40' : 'opacity-100'}`}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
@@ -292,13 +405,14 @@ export default function WeeklyCalendar({
                 <span className="text-xs font-semibold text-gray-400 uppercase block leading-none mb-1">
                   {format(day, 'EEE', { locale: da })}
                 </span>
-                <span
-                  className={`inline-flex items-center justify-center w-9 h-9 rounded-full text-lg font-bold ${
-                    isToday ? 'bg-indigo-600 text-white' : 'text-gray-900'
+                <a
+                  href={`/dag?date=${format(day, 'yyyy-MM-dd')}`}
+                  className={`inline-flex items-center justify-center w-9 h-9 rounded-full text-lg font-bold transition-colors ${
+                    isToday ? 'bg-indigo-600 text-white' : 'text-gray-900 hover:bg-gray-100 active:bg-gray-200'
                   }`}
                 >
                   {format(day, 'd')}
-                </span>
+                </a>
                 <span className={`text-xs font-medium block leading-none mt-0.5 ${isToday ? 'text-indigo-500' : 'text-gray-400'}`}>
                   {showMonth ? format(day, 'MMM', { locale: da }) : ' '}
                 </span>

@@ -27,6 +27,10 @@ export default function AddEventForm({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [allDay, setAllDay] = useState(editEvent?.allDay ?? false)
+  const [recurringFreq, setRecurringFreq] = useState<'none' | 'WEEKLY' | 'MONTHLY' | 'YEARLY'>(
+    (editEvent?.recurring?.freq as 'WEEKLY' | 'MONTHLY' | 'YEARLY') ?? 'none'
+  )
+  const [recurringUntil, setRecurringUntil] = useState(editEvent?.recurring?.until ?? '')
 
   const isEdit = !!editEvent
   const today = defaultDate ?? new Date().toISOString().split('T')[0]
@@ -97,6 +101,9 @@ export default function AddEventForm({
       end_at: endAt,
       all_day: isAllDay,
       source: 'manual',
+      recurring: recurringFreq !== 'none'
+        ? { freq: recurringFreq, ...(recurringUntil ? { until: recurringUntil } : {}) }
+        : null,
     }
 
     const res = await fetch('/api/events', {
@@ -231,6 +238,47 @@ export default function AddEventForm({
           </div>
         )}
       </div>
+
+      {/* Gentag */}
+      {!isEdit && (
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 px-4 py-4">
+          <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest block mb-3">
+            Gentager sig
+          </label>
+          <div className="flex flex-wrap gap-2 mb-3">
+            {(['none', 'WEEKLY', 'MONTHLY', 'YEARLY'] as const).map((freq) => {
+              const labels = { none: 'Aldrig', WEEKLY: 'Ugentlig', MONTHLY: 'Månedlig', YEARLY: 'Hvert år' }
+              const active = recurringFreq === freq
+              return (
+                <button
+                  key={freq}
+                  type="button"
+                  onClick={() => setRecurringFreq(freq)}
+                  className={`px-3.5 py-2 rounded-xl text-sm font-semibold transition-all active:scale-95 ${
+                    active ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  {labels[freq]}
+                </button>
+              )
+            })}
+          </div>
+          {recurringFreq !== 'none' && (
+            <div>
+              <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest block mb-2">
+                Gentag til (valgfrit)
+              </label>
+              <input
+                type="date"
+                value={recurringUntil}
+                onChange={(e) => setRecurringUntil(e.target.value)}
+                min={today}
+                className="w-full text-gray-900 text-base outline-none"
+              />
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Detaljer */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 divide-y divide-gray-100">
