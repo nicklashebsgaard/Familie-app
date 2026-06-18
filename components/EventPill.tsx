@@ -28,23 +28,23 @@ export default function EventPill({ event, onClick, tooltipSide = 'left' }: Prop
       <button
         type="button"
         onClick={() => onClick?.(event)}
-        className="w-full text-left rounded-lg overflow-hidden active:scale-95 transition-transform"
+        className="w-full text-left rounded-xl overflow-hidden active:scale-95 transition-transform"
         style={{ backgroundColor: color }}
       >
-        <div className="px-2 py-2 relative">
+        <div className="px-2.5 py-2 sm:px-3 sm:py-2.5 relative">
           {time && (
-            <span className="text-white/80 block text-[11px] leading-none mb-0.5 font-semibold tracking-tight">
+            <span className="text-white/80 block text-[11px] sm:text-xs leading-none mb-1 font-semibold tracking-tight">
               {time}
             </span>
           )}
-          <span className="text-white text-[13px] font-bold leading-tight block pr-5 truncate">
+          <span className="text-white text-[13px] sm:text-[14px] font-bold leading-snug block pr-5 truncate">
             {event.title}
           </span>
-          <div className="absolute bottom-1.5 right-1.5 flex flex-row-reverse">
+          <div className="absolute bottom-2 right-2 flex flex-row-reverse">
             {initials.map((initial, i) => (
               <span
                 key={i}
-                className="w-4 h-4 rounded-full bg-white/30 flex items-center justify-center text-white text-[8px] font-bold leading-none -ml-1 first:ml-0 border border-white/20"
+                className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-white/30 flex items-center justify-center text-white text-[8px] sm:text-[9px] font-bold leading-none -ml-1 first:ml-0 border border-white/20"
               >
                 {initial}
               </span>
@@ -55,14 +55,13 @@ export default function EventPill({ event, onClick, tooltipSide = 'left' }: Prop
 
       {/* Hover tooltip — desktop only */}
       <div
-        className={`pointer-events-none absolute bottom-full mb-2 z-50 w-52
+        className={`pointer-events-none absolute bottom-full mb-2 z-50 w-56
           opacity-0 group-hover/pill:opacity-100 transition-opacity duration-150
           hidden sm:block
           ${tooltipSide === 'right' ? 'right-0' : 'left-0'}`}
       >
-        <div className="bg-gray-900 rounded-2xl p-3.5 shadow-2xl ring-1 ring-white/10">
+        <div className="bg-gray-900 rounded-2xl p-4 shadow-2xl ring-1 ring-white/10">
           <p className="text-white font-bold text-sm leading-snug mb-1">{event.title}</p>
-
           <p className="text-white/60 text-xs mb-2">{timeRange}</p>
 
           {event.location && (
