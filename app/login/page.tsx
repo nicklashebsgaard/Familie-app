@@ -1,7 +1,7 @@
 import { signInWithGoogle, signInWithApple, signInWithMagicLink } from './actions'
 
 interface Props {
-  searchParams: { error?: string; message?: string }
+  searchParams: { error?: string; message?: string; next?: string }
 }
 
 export default function LoginPage({ searchParams }: Props) {
@@ -17,6 +17,7 @@ export default function LoginPage({ searchParams }: Props) {
     searchParams.message === 'check_email'
       ? 'Tjek din e-mail — vi har sendt dig et login-link.'
       : null
+  const next = searchParams.next ?? '/'
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 flex items-center justify-center p-4">
@@ -42,6 +43,7 @@ export default function LoginPage({ searchParams }: Props) {
         <div className="space-y-3">
           {/* Google */}
           <form action={signInWithGoogle}>
+            <input type="hidden" name="next" value={next} />
             <button
               type="submit"
               className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50 transition-colors"
@@ -58,6 +60,7 @@ export default function LoginPage({ searchParams }: Props) {
 
           {/* Apple */}
           <form action={signInWithApple}>
+            <input type="hidden" name="next" value={next} />
             <button
               type="submit"
               className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-black rounded-xl text-white font-medium hover:bg-gray-900 transition-colors"
@@ -80,6 +83,7 @@ export default function LoginPage({ searchParams }: Props) {
 
           {/* Magic link */}
           <form action={signInWithMagicLink} className="space-y-2">
+            <input type="hidden" name="next" value={next} />
             <input
               type="email"
               name="email"
