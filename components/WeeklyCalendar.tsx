@@ -346,10 +346,10 @@ export default function WeeklyCalendar({
         </button>
 
         <div className="text-center flex-1">
-          <span className="text-xs font-semibold text-indigo-600 uppercase tracking-widest block">
+          <span className="text-xs sm:text-sm font-semibold text-indigo-600 uppercase tracking-widest block">
             Uge {weekNumber}
           </span>
-          <h1 className="text-lg font-bold text-gray-900 leading-tight">{weekLabel}</h1>
+          <h1 className="text-lg sm:text-2xl font-bold text-gray-900 leading-tight">{weekLabel}</h1>
           {weekOffset !== 0 && (
             <button
               onClick={() => setWeekOffset(0)}
@@ -398,7 +398,7 @@ export default function WeeklyCalendar({
       {/* Day columns */}
       <div
         ref={weekGridRef}
-        className={`grid grid-cols-7 gap-1 transition-opacity duration-150 ${loading ? 'opacity-40' : 'opacity-100'}`}
+        className={`grid grid-cols-7 gap-1 sm:gap-2 transition-opacity duration-150 ${loading ? 'opacity-40' : 'opacity-100'}`}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
@@ -413,40 +413,40 @@ export default function WeeklyCalendar({
 
               {/* Day header */}
               <div className="text-center mb-1">
-                <span className="text-xs font-semibold text-gray-400 uppercase block leading-none mb-1">
+                <span className="text-xs sm:text-sm font-semibold text-gray-400 uppercase block leading-none mb-1">
                   {format(day, 'EEE', { locale: da })}
                 </span>
                 <a
                   href={`/dag?date=${format(day, 'yyyy-MM-dd')}`}
-                  className={`inline-flex items-center justify-center w-9 h-9 rounded-full text-lg font-bold transition-colors ${
+                  className={`inline-flex items-center justify-center w-9 h-9 sm:w-12 sm:h-12 rounded-full text-lg sm:text-2xl font-bold transition-colors ${
                     isToday ? 'bg-indigo-600 text-white' : 'text-gray-900 hover:bg-gray-100 active:bg-gray-200'
                   }`}
                 >
                   {format(day, 'd')}
                 </a>
-                <span className={`text-xs font-medium block leading-none mt-0.5 ${isToday ? 'text-indigo-500' : 'text-gray-400'}`}>
+                <span className={`text-xs sm:text-sm font-medium block leading-none mt-0.5 ${isToday ? 'text-indigo-500' : 'text-gray-400'}`}>
                   {showMonth ? format(day, 'MMM', { locale: da }) : ' '}
                 </span>
               </div>
 
               {/* Weather strip */}
               <div
-                className="flex flex-col items-center mb-2 min-h-[42px]"
+                className="flex flex-col items-center mb-2 min-h-[42px] sm:min-h-[60px]"
                 title={w ? `${w.tempMax}° · ${w.rain.toFixed(1)} mm nedbør · ${w.wind} km/h vind` : ''}
               >
                 {w && (
                   <>
-                    <span className="text-base leading-none">{weatherEmoji(w.code)}</span>
-                    <span className="text-xs font-bold text-gray-700 mt-0.5 leading-none">{w.tempMax}°</span>
+                    <span className="text-base sm:text-2xl leading-none">{weatherEmoji(w.code)}</span>
+                    <span className="text-xs sm:text-sm font-bold text-gray-700 mt-0.5 leading-none">{w.tempMax}°</span>
                     {w.rain > 0.5 && (
-                      <span className="text-[10px] font-semibold text-blue-500 leading-none mt-0.5">{w.rain.toFixed(0)}mm</span>
+                      <span className="text-[10px] sm:text-xs font-semibold text-blue-500 leading-none mt-0.5">{w.rain.toFixed(0)}mm</span>
                     )}
                   </>
                 )}
               </div>
 
               {/* Events + hover add button */}
-              <div className="flex flex-col gap-1.5 min-h-[60px]">
+              <div className="flex flex-col gap-1.5 sm:gap-2 min-h-[60px] sm:min-h-[80px]">
                 {dayEvents.map((event) => (
                   <EventPill key={event.id} event={event} onClick={setSelectedEvent} tooltipSide={idx >= 4 ? 'right' : 'left'} />
                 ))}

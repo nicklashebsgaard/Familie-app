@@ -83,7 +83,7 @@ export default async function TilfoejPage({ searchParams }: Props) {
   }
 
   return (
-    <div className="pt-4">
+    <div className="pt-4 max-w-lg mx-auto">
       <h1 className="text-2xl font-bold text-gray-900 mb-5 px-1">
         {editEvent ? 'Rediger begivenhed' : 'Tilføj begivenhed'}
       </h1>
