@@ -1,5 +1,6 @@
 import { format } from 'date-fns'
 import type { CalendarEvent } from '@/lib/types'
+import Avatar from './Avatar'
 
 interface Props {
   event: CalendarEvent
@@ -19,9 +20,7 @@ export default function EventPill({ event, onClick, tooltipSide = 'left' }: Prop
     ? 'Hele dagen'
     : `${format(event.startAt, 'HH:mm')} – ${format(event.endAt, 'HH:mm')}`
 
-  const initials = allParticipants
-    .slice(0, 3)
-    .map((p) => p?.name?.[0]?.toUpperCase() ?? '?')
+  const shown = allParticipants.slice(0, 3).filter(Boolean) as NonNullable<typeof primaryPerson>[]
 
   return (
     <div className="relative group/pill w-full">
@@ -31,25 +30,30 @@ export default function EventPill({ event, onClick, tooltipSide = 'left' }: Prop
         className="w-full text-left rounded-xl overflow-hidden active:scale-95 transition-transform"
         style={{ backgroundColor: color }}
       >
-        <div className="px-2.5 py-2 sm:px-3 sm:py-2.5 relative">
+        <div className="px-2.5 pt-2 pb-8 sm:px-3 sm:pt-2.5 sm:pb-9 relative min-h-[52px] sm:min-h-[60px]">
           {time && (
             <span className="text-white/80 block text-[11px] sm:text-xs leading-none mb-1 font-semibold tracking-tight">
               {time}
             </span>
           )}
-          <span className="text-white text-[13px] sm:text-[14px] font-bold leading-snug block pr-5 truncate">
+          <span className="text-white text-[13px] sm:text-sm font-bold leading-snug block truncate">
             {event.title}
           </span>
-          <div className="absolute bottom-2 right-2 flex flex-row-reverse">
-            {initials.map((initial, i) => (
-              <span
-                key={i}
-                className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-white/30 flex items-center justify-center text-white text-[8px] sm:text-[9px] font-bold leading-none -ml-1 first:ml-0 border border-white/20"
-              >
-                {initial}
-              </span>
-            ))}
-          </div>
+        </div>
+
+        {/* Avatars bottom-right */}
+        <div className="absolute bottom-1.5 right-1.5 flex flex-row-reverse -space-x-1.5 space-x-reverse">
+          {shown.map((p, i) => (
+            <div key={i} className="ring-1 ring-white/40 rounded-full">
+              <Avatar
+                name={p.name}
+                color={p.color}
+                avatarUrl={'avatarUrl' in p ? p.avatarUrl : undefined}
+                size={20}
+                className="sm:!w-[22px] sm:!h-[22px]"
+              />
+            </div>
+          ))}
         </div>
       </button>
 
@@ -80,16 +84,16 @@ export default function EventPill({ event, onClick, tooltipSide = 'left' }: Prop
 
           {allParticipants.length > 0 && (
             <div className="flex items-center gap-1.5 mt-2.5 pt-2 border-t border-white/10">
-              {allParticipants.slice(0, 5).map((p, i) => p && (
-                <div
+              {(allParticipants.slice(0, 5) as NonNullable<typeof primaryPerson>[]).map((p, i) => (
+                <Avatar
                   key={i}
-                  className="w-5 h-5 rounded-full flex items-center justify-center text-white text-[9px] font-bold flex-shrink-0"
-                  style={{ backgroundColor: p.color }}
-                >
-                  {p.name[0].toUpperCase()}
-                </div>
+                  name={p.name}
+                  color={p.color}
+                  avatarUrl={'avatarUrl' in p ? p.avatarUrl : undefined}
+                  size={20}
+                />
               ))}
-              <span className="text-white/50 text-[10px] truncate">
+              <span className="text-white/50 text-[10px] truncate ml-0.5">
                 {allParticipants.map((p) => p?.name).filter(Boolean).join(', ')}
               </span>
             </div>
