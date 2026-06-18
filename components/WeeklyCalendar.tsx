@@ -226,16 +226,19 @@ export default function WeeklyCalendar({
 
   // Check push notification status on mount
   useEffect(() => {
-    if (!('Notification' in window) || !('serviceWorker' in navigator)) {
+    if (!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) {
       setNotifState('unsupported')
       return
     }
     if (Notification.permission === 'denied') { setNotifState('denied'); return }
+    const timer = setTimeout(() => setNotifState('unsupported'), 3000)
     navigator.serviceWorker.ready.then((reg) =>
       reg.pushManager.getSubscription().then((sub) => {
+        clearTimeout(timer)
         setNotifState(sub ? 'subscribed' : 'unknown')
       })
-    ).catch(() => setNotifState('unsupported'))
+    ).catch(() => { clearTimeout(timer); setNotifState('unsupported') })
+    return () => clearTimeout(timer)
   }, [])
 
   async function handleNotification() {
