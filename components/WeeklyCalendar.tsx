@@ -53,6 +53,14 @@ export default function WeeklyCalendar({
   const managedById = new Map(managedMembers.map((m) => [m.id, m]))
 
   function rowToEvent(row: Record<string, unknown>): CalendarEvent {
+    const rawParticipants = (row.participants as string[] | null) ?? []
+    const participants = rawParticipants
+      .map((pid) => {
+        const [type, id] = pid.split(':')
+        return type === 'auth' ? membersById.get(id) : managedById.get(id)
+      })
+      .filter(Boolean) as (FamilyMember | ManagedMember)[]
+
     return {
       id: row.id as string,
       familyId: row.family_id as string,
@@ -69,6 +77,7 @@ export default function WeeklyCalendar({
       managedMember: row.managed_member_id
         ? managedById.get(row.managed_member_id as string)
         : undefined,
+      participants: participants.length > 0 ? participants : undefined,
     }
   }
 
@@ -188,9 +197,9 @@ export default function WeeklyCalendar({
           const showMonth = day.getDate() === 1 || idx === 0
 
           return (
-            <div key={day.toISOString()} className="flex flex-col">
+            <div key={day.toISOString()} className="flex flex-col group/day">
               {/* Day header */}
-              <div className="text-center mb-2">
+              <div className="text-center mb-2 relative">
                 <span className="text-xs font-semibold text-gray-400 uppercase block leading-none mb-1">
                   {format(day, 'EEE', { locale: da })}
                 </span>
@@ -204,6 +213,13 @@ export default function WeeklyCalendar({
                 <span className={`text-[11px] font-medium block leading-none mt-0.5 ${isToday ? 'text-indigo-500' : 'text-gray-400'}`}>
                   {showMonth ? format(day, 'MMM', { locale: da }) : ' '}
                 </span>
+                <a
+                  href={`/tilfoej?date=${format(day, 'yyyy-MM-dd')}`}
+                  className="absolute top-0 right-0 opacity-0 group-hover/day:opacity-100 transition-opacity p-0.5 rounded-full bg-indigo-100 hover:bg-indigo-200"
+                  aria-label="Tilføj begivenhed"
+                >
+                  <Plus size={11} className="text-indigo-600" />
+                </a>
               </div>
 
               {/* Events */}

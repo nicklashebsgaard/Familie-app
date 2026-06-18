@@ -37,6 +37,8 @@ export interface CalendarEvent {
   // The person this event belongs to visually (managed member takes precedence)
   member?: FamilyMember
   managedMember?: ManagedMember
+  // All participants (resolved). Empty = fall back to member/managedMember
+  participants?: (FamilyMember | ManagedMember)[]
 }
 
 export interface RecurringRule {

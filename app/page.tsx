@@ -12,9 +12,17 @@ import type { CalendarEvent, FamilyMember, ManagedMember } from '@/lib/types'
 
 function mapEvent(
   row: Record<string, unknown>,
-  member: FamilyMember | undefined,
-  managedMember: ManagedMember | undefined,
+  membersMap: Map<string, FamilyMember>,
+  managedMap: Map<string, ManagedMember>,
 ): CalendarEvent {
+  const rawParticipants = (row.participants as string[] | null) ?? []
+  const participants = rawParticipants
+    .map((pid) => {
+      const [type, id] = pid.split(':')
+      return type === 'auth' ? membersMap.get(id) : managedMap.get(id)
+    })
+    .filter(Boolean) as (FamilyMember | ManagedMember)[]
+
   return {
     id: row.id as string,
     familyId: row.family_id as string,
@@ -29,8 +37,11 @@ function mapEvent(
     source: row.source as 'manual' | 'aula',
     aulaUid: row.aula_uid as string | undefined,
     transport: row.transport as string | undefined,
-    member,
-    managedMember,
+    member: membersMap.get(row.user_id as string),
+    managedMember: row.managed_member_id
+      ? managedMap.get(row.managed_member_id as string)
+      : undefined,
+    participants: participants.length > 0 ? participants : undefined,
   }
 }
 
@@ -107,12 +118,7 @@ export default async function HomePage() {
   )
 
   const events: CalendarEvent[] = (eventsResult.data ?? []).map((row) => {
-    const r = row as Record<string, unknown>
-    return mapEvent(
-      r,
-      membersMap.get(row.user_id),
-      r.managed_member_id ? managedMap.get(r.managed_member_id as string) : undefined,
-    )
+    return mapEvent(row as Record<string, unknown>, membersMap, managedMap)
   })
 
   const members = Array.from(membersMap.values())

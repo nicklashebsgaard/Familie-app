@@ -30,7 +30,10 @@ export default function EventSheet({ event, currentUserId, isAdmin, onClose, onD
     setTimeout(onClose, 200)
   }
 
-  const person = event.managedMember ?? event.member
+  const allParticipants = event.participants?.length
+    ? event.participants
+    : [event.managedMember ?? event.member].filter(Boolean) as (typeof event.member)[]
+  const person = allParticipants[0]
   const canEdit = isAdmin || event.userId === currentUserId
 
   const dateStr = format(event.startAt, 'EEEE d. MMMM', { locale: da })
@@ -76,16 +79,21 @@ export default function EventSheet({ event, currentUserId, isAdmin, onClose, onD
             </button>
 
             <div className="flex items-center gap-3 mb-3 pr-8">
-              {person && (
-                <Avatar
-                  name={person.name}
-                  color={person.color}
-                  avatarUrl={'avatarUrl' in person ? person.avatarUrl : undefined}
-                  size={40}
-                />
-              )}
+              <div className="flex -space-x-1.5">
+                {allParticipants.slice(0, 4).map((p, i) => p && (
+                  <Avatar
+                    key={i}
+                    name={p.name}
+                    color={p.color}
+                    avatarUrl={'avatarUrl' in p ? p.avatarUrl : undefined}
+                    size={allParticipants.length > 1 ? 32 : 40}
+                  />
+                ))}
+              </div>
               <div>
-                <p className="text-sm font-bold text-gray-900">{person?.name ?? 'Ukendt'}</p>
+                <p className="text-sm font-bold text-gray-900 leading-snug">
+                  {allParticipants.map((p) => p?.name).filter(Boolean).join(', ') || 'Ukendt'}
+                </p>
                 {event.source === 'aula' && (
                   <span className="text-xs text-indigo-600 font-semibold">Aula</span>
                 )}

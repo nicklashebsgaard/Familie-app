@@ -4,12 +4,14 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { format } from 'date-fns'
 import type { FamilyMember, ManagedMember, CalendarEvent } from '@/lib/types'
+import Avatar from './Avatar'
 
 interface Props {
   members: FamilyMember[]
   managedMembers: ManagedMember[]
   familyId: string
   currentUserId: string
+  defaultDate?: string
   editEvent?: CalendarEvent | null
 }
 
@@ -18,6 +20,7 @@ export default function AddEventForm({
   managedMembers,
   familyId,
   currentUserId,
+  defaultDate,
   editEvent,
 }: Props) {
   const router = useRouter()
@@ -25,17 +28,44 @@ export default function AddEventForm({
   const [error, setError] = useState<string | null>(null)
 
   const isEdit = !!editEvent
-  const today = new Date().toISOString().split('T')[0]
+  const today = defaultDate ?? new Date().toISOString().split('T')[0]
 
-  // Derive default person value from editEvent
-  const defaultPerson = (() => {
-    if (!editEvent) return `auth:${currentUserId}`
-    if (editEvent.managedMemberId) return `managed:${editEvent.managedMemberId}`
-    return `auth:${editEvent.userId}`
+  // Build the full people list for chips
+  const allPeople = [
+    ...members.map((m) => ({ value: `auth:${m.id}`, name: m.name, color: m.color, avatarUrl: m.avatarUrl })),
+    ...managedMembers.map((m) => ({ value: `managed:${m.id}`, name: m.name, color: m.color, avatarUrl: m.avatarUrl })),
+  ]
+
+  // Initial participants from editEvent or default to current user
+  const initialParticipants = (() => {
+    if (!editEvent) return [`auth:${currentUserId}`]
+    if (editEvent.participants?.length) {
+      return editEvent.participants.map((p) =>
+        'familyId' in p ? `managed:${p.id}` : `auth:${p.id}`
+      )
+    }
+    if (editEvent.managedMemberId) return [`managed:${editEvent.managedMemberId}`]
+    return [`auth:${editEvent.userId}`]
   })()
+
+  const [participants, setParticipants] = useState<string[]>(initialParticipants)
+
+  function toggle(value: string) {
+    setParticipants((prev) =>
+      prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]
+    )
+  }
+
+  function selectAll() {
+    setParticipants(allPeople.map((p) => p.value))
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
+    if (participants.length === 0) {
+      setError('Vælg mindst én person')
+      return
+    }
     setLoading(true)
     setError(null)
 
@@ -52,14 +82,18 @@ export default function AddEventForm({
       ? new Date(`${startDate}T23:59:59`).toISOString()
       : new Date(`${startDate}T${endTime}:00`).toISOString()
 
-    const personValue = form.get('person') as string
-    const [personType, personId] = personValue.split(':')
+    // Derive user_id and managed_member_id from participants for backward compat
+    const firstAuth = participants.find((p) => p.startsWith('auth:'))
+    const firstManaged = participants.find((p) => p.startsWith('managed:'))
+    const userId = firstAuth ? firstAuth.split(':')[1] : currentUserId
+    const managedMemberId = firstManaged ? firstManaged.split(':')[1] : null
 
     const body = {
       ...(isEdit ? { id: editEvent!.id } : {}),
       family_id: familyId,
-      user_id: personType === 'auth' ? personId : currentUserId,
-      managed_member_id: personType === 'managed' ? personId : null,
+      user_id: userId,
+      managed_member_id: managedMemberId,
+      participants,
       title: form.get('title') as string,
       description: (form.get('description') as string) || null,
       location: (form.get('location') as string) || null,
@@ -87,15 +121,9 @@ export default function AddEventForm({
     router.refresh()
   }
 
-  const defaultDate = editEvent
-    ? format(editEvent.startAt, 'yyyy-MM-dd')
-    : today
-  const defaultStartTime = editEvent && !editEvent.allDay
-    ? format(editEvent.startAt, 'HH:mm')
-    : '08:00'
-  const defaultEndTime = editEvent && !editEvent.allDay
-    ? format(editEvent.endAt, 'HH:mm')
-    : '09:00'
+  const defaultStartDate = editEvent ? format(editEvent.startAt, 'yyyy-MM-dd') : today
+  const defaultStartTime = editEvent && !editEvent.allDay ? format(editEvent.startAt, 'HH:mm') : '08:00'
+  const defaultEndTime = editEvent && !editEvent.allDay ? format(editEvent.endAt, 'HH:mm') : '09:00'
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -120,27 +148,41 @@ export default function AddEventForm({
         />
       </div>
 
-      {/* Person */}
+      {/* Participants */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Person <span className="text-red-500">*</span>
-        </label>
-        <select
-          name="person"
-          defaultValue={defaultPerson}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
-        >
-          {members.map((m) => (
-            <option key={m.id} value={`auth:${m.id}`}>{m.name}</option>
-          ))}
-          {managedMembers.length > 0 && (
-            <optgroup label="Børn">
-              {managedMembers.map((m) => (
-                <option key={m.id} value={`managed:${m.id}`}>{m.name}</option>
-              ))}
-            </optgroup>
-          )}
-        </select>
+        <div className="flex items-center justify-between mb-2">
+          <label className="text-sm font-medium text-gray-700">
+            For hvem? <span className="text-red-500">*</span>
+          </label>
+          <button
+            type="button"
+            onClick={selectAll}
+            className="text-xs text-indigo-600 hover:underline"
+          >
+            Vælg alle
+          </button>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {allPeople.map((p) => {
+            const active = participants.includes(p.value)
+            return (
+              <button
+                key={p.value}
+                type="button"
+                onClick={() => toggle(p.value)}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border-2 text-sm font-medium transition-all ${
+                  active
+                    ? 'border-transparent text-white'
+                    : 'border-gray-200 text-gray-600 bg-white hover:border-gray-300'
+                }`}
+                style={active ? { backgroundColor: p.color } : {}}
+              >
+                <Avatar name={p.name} color={p.color} avatarUrl={p.avatarUrl} size={18} />
+                {p.name}
+              </button>
+            )
+          })}
+        </div>
       </div>
 
       {/* Date */}
@@ -152,7 +194,7 @@ export default function AddEventForm({
           name="start_date"
           type="date"
           required
-          defaultValue={defaultDate}
+          defaultValue={defaultStartDate}
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
         />
       </div>
@@ -231,7 +273,7 @@ export default function AddEventForm({
 
       <button
         type="submit"
-        disabled={loading}
+        disabled={loading || participants.length === 0}
         className="w-full py-3 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       >
         {loading ? 'Gemmer...' : isEdit ? 'Opdater begivenhed' : 'Tilføj begivenhed'}

@@ -62,12 +62,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
-  const { data, error } = await supabase
-    .from('events')
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase.from('events') as any)
     .insert({
       family_id: body.family_id,
       user_id: body.user_id,
       managed_member_id: body.managed_member_id ?? null,
+      participants: body.participants ?? [],
       title: body.title,
       description: body.description ?? null,
       location: body.location ?? null,

@@ -4,7 +4,7 @@ import type { FamilyMember, ManagedMember, CalendarEvent } from '@/lib/types'
 import { parseISO } from 'date-fns'
 
 interface Props {
-  searchParams: { edit?: string }
+  searchParams: { edit?: string; date?: string }
 }
 
 export default async function TilfoejPage({ searchParams }: Props) {
@@ -41,6 +41,9 @@ export default async function TilfoejPage({ searchParams }: Props) {
     id: m.id, name: m.name, color: m.color, familyId: m.family_id, avatarUrl: m.avatar_url,
   }))
 
+  const membersMap = new Map(members.map((m) => [m.id, m]))
+  const managedMap = new Map(managedMembers.map((m) => [m.id, m]))
+
   // Edit mode: load the existing event
   let editEvent: CalendarEvent | null = null
   if (searchParams.edit) {
@@ -52,6 +55,15 @@ export default async function TilfoejPage({ searchParams }: Props) {
       .single()
 
     if (row) {
+      const r = row as Record<string, unknown>
+      const rawParticipants = (r.participants as string[] | null) ?? []
+      const participants = rawParticipants
+        .map((pid) => {
+          const [type, id] = pid.split(':')
+          return type === 'auth' ? membersMap.get(id) : managedMap.get(id)
+        })
+        .filter(Boolean) as (FamilyMember | ManagedMember)[]
+
       editEvent = {
         id: row.id,
         familyId: row.family_id,
@@ -65,6 +77,7 @@ export default async function TilfoejPage({ searchParams }: Props) {
         endAt: parseISO(row.end_at),
         allDay: row.all_day,
         source: row.source as 'manual' | 'aula',
+        participants: participants.length > 0 ? participants : undefined,
       }
     }
   }
@@ -80,6 +93,7 @@ export default async function TilfoejPage({ searchParams }: Props) {
         familyId={profile.family_id}
         currentUserId={user.id}
         editEvent={editEvent}
+        defaultDate={searchParams.date}
       />
     </div>
   )
