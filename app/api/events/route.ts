@@ -43,20 +43,20 @@ async function sendFamilyPush(familyId: string, title: string, body: string) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: subs } = await (serviceClient as any)
     .from('push_subscriptions')
-    .select('id, user_id, subscription')
+    .select('id, endpoint, p256dh, auth')
     .eq('family_id', familyId)
 
   if (!subs?.length) return
 
   await Promise.all(
-    (subs as Array<{ id: string; user_id: string; subscription: unknown }>).map(async (sub) => {
+    (subs as Array<{ id: string; endpoint: string; p256dh: string; auth: string }>).map(async (sub) => {
       try {
         await webpush.sendNotification(
-          sub.subscription as webpush.PushSubscription,
+          { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
           JSON.stringify({ title, body, url: '/' }),
         )
       } catch {
-        // Subscription expired — remove it
+        // Subscription expired or invalid — remove it
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await (serviceClient as any).from('push_subscriptions').delete().eq('id', sub.id)
       }
@@ -149,13 +149,14 @@ export async function POST(request: NextRequest) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  // Send push notification to family (fire-and-forget)
-  sendFamilyPush(body.family_id, `Ny begivenhed: ${body.title}`, body.start_at
+  const first = Array.isArray(data) ? data[0] : data
+
+  // Send push notification to family (await so it completes before serverless fn exits)
+  const dateLabel = body.start_at
     ? new Date(body.start_at).toLocaleDateString('da-DK', { weekday: 'long', day: 'numeric', month: 'long' })
     : ''
-  ).catch(() => {})
+  await sendFamilyPush(body.family_id, `Ny begivenhed: ${body.title}`, dateLabel).catch(() => {})
 
-  const first = Array.isArray(data) ? data[0] : data
   return NextResponse.json(first, { status: 201 })
 }
 

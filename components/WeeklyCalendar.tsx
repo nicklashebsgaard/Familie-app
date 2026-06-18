@@ -37,6 +37,15 @@ interface Props {
   currentUserId: string
 }
 
+function vapidKeyToBuffer(base64Url: string): ArrayBuffer {
+  const base64 = (base64Url + '===').replace(/-/g, '+').replace(/_/g, '/')
+  const raw = atob(base64)
+  const buf = new ArrayBuffer(raw.length)
+  const view = new DataView(buf)
+  for (let i = 0; i < raw.length; i++) view.setUint8(i, raw.charCodeAt(i))
+  return buf
+}
+
 function buildWeekDays(offset: number): Date[] {
   const base = new Date()
   base.setHours(0, 0, 0, 0)
@@ -259,8 +268,7 @@ export default function WeeklyCalendar({
     const reg = await navigator.serviceWorker.ready
     const sub = await reg.pushManager.subscribe({
       userVisibleOnly: true,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      applicationServerKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY as any,
+      applicationServerKey: vapidKeyToBuffer(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!),
     })
     await fetch('/api/push/subscribe', {
       method: 'POST',

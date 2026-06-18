@@ -15,7 +15,12 @@ export async function POST(request: NextRequest) {
 
   if (!profile?.family_id) return NextResponse.json({ error: 'No family' }, { status: 400 })
 
-  const subscription = await request.json()
+  const sub = await request.json()
+  const { endpoint, keys } = sub as { endpoint: string; keys: { p256dh: string; auth: string } }
+
+  if (!endpoint || !keys?.p256dh || !keys?.auth) {
+    return NextResponse.json({ error: 'Invalid subscription' }, { status: 400 })
+  }
 
   // Replace any existing subscription for this user
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -25,7 +30,9 @@ export async function POST(request: NextRequest) {
   const { error } = await (supabase as any).from('push_subscriptions').insert({
     user_id: user.id,
     family_id: profile.family_id,
-    subscription,
+    endpoint,
+    p256dh: keys.p256dh,
+    auth: keys.auth,
   })
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
