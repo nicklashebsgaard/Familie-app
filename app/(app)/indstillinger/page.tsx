@@ -141,7 +141,6 @@ export default async function IndstillingerPage() {
                     type="color"
                     name="color"
                     defaultValue={m.color}
-                    onChange={() => {}}
                     className="w-8 h-8 rounded cursor-pointer border border-gray-200"
                     title="Vælg farve"
                   />
