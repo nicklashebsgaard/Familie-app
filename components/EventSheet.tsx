@@ -27,7 +27,7 @@ export default function EventSheet({ event, currentUserId, isAdmin, onClose, onD
 
   function close() {
     setVisible(false)
-    setTimeout(onClose, 280)
+    setTimeout(onClose, 300)
   }
 
   const allParticipants = event.participants?.length
@@ -57,27 +57,29 @@ export default function EventSheet({ event, currentUserId, isAdmin, onClose, onD
         onClick={close}
       />
 
-      {/* Bottom sheet */}
-      <div
-        className={`fixed inset-x-0 bottom-0 z-50 transition-transform duration-300 ease-out ${visible ? 'translate-y-0' : 'translate-y-full'}`}
-      >
+      {/* Sheet container — bottom on mobile, centered on desktop */}
+      <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center pointer-events-none sm:p-4">
         <div
-          className="bg-white rounded-t-3xl shadow-2xl overflow-hidden"
+          className={`pointer-events-auto w-full sm:max-w-sm bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl overflow-hidden transition-all duration-300 ease-out
+            ${visible
+              ? 'translate-y-0 opacity-100 sm:scale-100'
+              : 'translate-y-full opacity-0 sm:translate-y-0 sm:scale-95'
+            }`}
           style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
         >
-          {/* Drag handle */}
-          <div className="flex justify-center pt-3 pb-1">
+          {/* Drag handle (mobile only) */}
+          <div className="flex justify-center pt-3 pb-1 sm:hidden">
             <div className="w-10 h-1 bg-gray-300 rounded-full" />
           </div>
 
           {/* Colored header */}
           <div
-            className="px-5 pt-3 pb-5 relative"
+            className="px-5 pt-4 pb-5 relative"
             style={{ backgroundColor: `${primaryColor}18` }}
           >
             <button
               onClick={close}
-              className="absolute top-3 right-4 p-2 rounded-full hover:bg-black/10 transition-colors"
+              className="absolute top-4 right-4 p-1.5 rounded-full hover:bg-black/10 transition-colors"
             >
               <X size={18} className="text-gray-500" />
             </button>
