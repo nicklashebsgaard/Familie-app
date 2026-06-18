@@ -27,13 +27,14 @@ export default function EventSheet({ event, currentUserId, isAdmin, onClose, onD
 
   function close() {
     setVisible(false)
-    setTimeout(onClose, 200)
+    setTimeout(onClose, 280)
   }
 
   const allParticipants = event.participants?.length
     ? event.participants
     : [event.managedMember ?? event.member].filter(Boolean) as (typeof event.member)[]
-  const person = allParticipants[0]
+
+  const primaryColor = allParticipants[0]?.color ?? '#6366f1'
   const canEdit = isAdmin || event.userId === currentUserId
 
   const dateStr = format(event.startAt, 'EEEE d. MMMM', { locale: da })
@@ -52,46 +53,50 @@ export default function EventSheet({ event, currentUserId, isAdmin, onClose, onD
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-40 transition-opacity duration-200"
-        style={{ backgroundColor: visible ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0)' }}
+        className={`fixed inset-0 z-40 bg-black transition-opacity duration-300 ${visible ? 'opacity-50' : 'opacity-0'}`}
         onClick={close}
       />
 
-      {/* Centered modal */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+      {/* Bottom sheet */}
+      <div
+        className={`fixed inset-x-0 bottom-0 z-50 transition-transform duration-300 ease-out ${visible ? 'translate-y-0' : 'translate-y-full'}`}
+      >
         <div
-          className="bg-white rounded-2xl shadow-2xl w-full max-w-sm pointer-events-auto overflow-hidden transition-all duration-200"
-          style={{
-            opacity: visible ? 1 : 0,
-            transform: visible ? 'scale(1) translateY(0)' : 'scale(0.95) translateY(8px)',
-          }}
+          className="bg-white rounded-t-3xl shadow-2xl overflow-hidden"
+          style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
         >
+          {/* Drag handle */}
+          <div className="flex justify-center pt-3 pb-1">
+            <div className="w-10 h-1 bg-gray-300 rounded-full" />
+          </div>
+
           {/* Colored header */}
           <div
-            className="px-5 pt-5 pb-4 relative"
-            style={{ backgroundColor: person?.color ? `${person.color}22` : '#f3f4f6' }}
+            className="px-5 pt-3 pb-5 relative"
+            style={{ backgroundColor: `${primaryColor}18` }}
           >
             <button
               onClick={close}
-              className="absolute top-4 right-4 p-1.5 rounded-full hover:bg-black/10 transition-colors"
+              className="absolute top-3 right-4 p-2 rounded-full hover:bg-black/10 transition-colors"
             >
               <X size={18} className="text-gray-500" />
             </button>
 
-            <div className="flex items-center gap-3 mb-3 pr-8">
-              <div className="flex -space-x-1.5">
-                {allParticipants.slice(0, 4).map((p, i) => p && (
+            {/* Participants */}
+            <div className="flex items-center gap-3 mb-4 pr-10">
+              <div className="flex -space-x-2">
+                {allParticipants.slice(0, 5).map((p, i) => p && (
                   <Avatar
                     key={i}
                     name={p.name}
                     color={p.color}
                     avatarUrl={'avatarUrl' in p ? p.avatarUrl : undefined}
-                    size={allParticipants.length > 1 ? 32 : 40}
+                    size={allParticipants.length > 1 ? 36 : 44}
                   />
                 ))}
               </div>
-              <div>
-                <p className="text-sm font-bold text-gray-900 leading-snug">
+              <div className="min-w-0">
+                <p className="font-bold text-gray-900 leading-snug truncate">
                   {allParticipants.map((p) => p?.name).filter(Boolean).join(', ') || 'Ukendt'}
                 </p>
                 {event.source === 'aula' && (
@@ -100,36 +105,36 @@ export default function EventSheet({ event, currentUserId, isAdmin, onClose, onD
               </div>
             </div>
 
-            <h2 className="text-xl font-bold text-gray-900 leading-snug">{event.title}</h2>
+            <h2 className="text-2xl font-bold text-gray-900 leading-snug">{event.title}</h2>
           </div>
 
           {/* Details */}
-          <div className="px-5 py-4 space-y-3">
-            <Row icon={<Clock size={16} className="text-gray-400" />}>
-              <span className="font-semibold text-gray-900 capitalize text-sm">{dateStr}</span>
+          <div className="px-5 py-5 space-y-4">
+            <Row icon={<Clock size={17} className="text-gray-400" />}>
+              <span className="font-semibold text-gray-900 capitalize">{dateStr}</span>
               <span className="text-gray-500 text-sm">{timeStr}</span>
             </Row>
             {event.location && (
-              <Row icon={<MapPin size={16} className="text-gray-400" />}>
-                <span className="text-gray-800 text-sm">{event.location}</span>
+              <Row icon={<MapPin size={17} className="text-gray-400" />}>
+                <span className="text-gray-800">{event.location}</span>
               </Row>
             )}
             {event.transport && (
-              <Row icon={<Truck size={16} className="text-gray-400" />}>
-                <span className="text-gray-800 text-sm">{event.transport}</span>
+              <Row icon={<Truck size={17} className="text-gray-400" />}>
+                <span className="text-gray-800">{event.transport}</span>
               </Row>
             )}
             {event.description && (
-              <p className="text-sm text-gray-600 pl-6 leading-relaxed">{event.description}</p>
+              <p className="text-gray-600 leading-relaxed pl-7">{event.description}</p>
             )}
           </div>
 
           {/* Actions */}
           {canEdit && (
-            <div className="px-5 pb-5 pt-1 flex gap-2">
+            <div className="px-5 pb-6 pt-1 flex gap-3">
               <a
                 href={`/tilfoej?edit=${event.id}`}
-                className="flex-1 flex items-center justify-center gap-1.5 py-3 rounded-xl border-2 border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
+                className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-2xl border-2 border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
               >
                 <Pencil size={15} />
                 Rediger
@@ -137,14 +142,14 @@ export default function EventSheet({ event, currentUserId, isAdmin, onClose, onD
               <button
                 onClick={handleDelete}
                 disabled={deleting}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-3 rounded-xl text-sm font-semibold transition-all ${
+                className={`flex-1 flex items-center justify-center gap-2 py-3.5 rounded-2xl text-sm font-semibold transition-all ${
                   confirming
                     ? 'bg-red-500 text-white'
                     : 'border-2 border-gray-200 text-red-500 hover:bg-red-50'
                 }`}
               >
                 <Trash2 size={15} />
-                {confirming ? 'Bekræft' : 'Slet'}
+                {confirming ? 'Bekræft sletning' : 'Slet'}
               </button>
             </div>
           )}

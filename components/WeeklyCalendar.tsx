@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { addWeeks, subWeeks, format, isSameDay, parseISO, getISOWeek, startOfWeek, endOfWeek } from 'date-fns'
 import { da } from 'date-fns/locale'
-import { ChevronLeft, ChevronRight, Plus, Droplets, Wind } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Plus } from 'lucide-react'
 import type { CalendarEvent, FamilyMember, ManagedMember } from '@/lib/types'
 import EventPill from './EventPill'
 import EventSheet from './EventSheet'
@@ -14,6 +14,18 @@ interface WeatherData {
   tempMax: number
   rain: number
   wind: number
+  code: number
+}
+
+function weatherEmoji(code: number): string {
+  if (code === 0) return '☀️'
+  if (code <= 3) return '⛅'
+  if (code <= 48) return '🌫️'
+  if (code <= 67) return '🌧️'
+  if (code <= 77) return '❄️'
+  if (code <= 82) return '🌦️'
+  if (code <= 86) return '🌨️'
+  return '⛈️'
 }
 
 interface Props {
@@ -54,6 +66,8 @@ export default function WeeklyCalendar({
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null)
   const [filteredPersonId, setFilteredPersonId] = useState<string | null>(null)
   const [weather, setWeather] = useState<Record<string, WeatherData>>({})
+  const [touchStartX, setTouchStartX] = useState<number | null>(null)
+  const [touchStartY, setTouchStartY] = useState<number | null>(null)
 
   const isAdmin = members.find((m) => m.id === currentUserId)?.role === 'admin'
   const membersById = new Map(members.map((m) => [m.id, m]))
@@ -149,7 +163,7 @@ export default function WeeklyCalendar({
     function loadWeather(lat: number, lon: number) {
       fetch(
         `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
-        `&daily=temperature_2m_max,precipitation_sum,windspeed_10m_max` +
+        `&daily=temperature_2m_max,precipitation_sum,windspeed_10m_max,weathercode` +
         `&timezone=auto&past_days=7&forecast_days=14`
       )
         .then((r) => r.json())
@@ -161,6 +175,7 @@ export default function WeeklyCalendar({
               tempMax: Math.round(data.daily.temperature_2m_max[i]),
               rain: data.daily.precipitation_sum[i] ?? 0,
               wind: Math.round(data.daily.windspeed_10m_max[i] ?? 0),
+              code: data.daily.weathercode?.[i] ?? 0,
             }
           })
           setWeather(map)
@@ -189,6 +204,22 @@ export default function WeeklyCalendar({
       { timeout: 5000 }
     )
   }, [])
+
+  function handleTouchStart(e: React.TouchEvent) {
+    setTouchStartX(e.touches[0].clientX)
+    setTouchStartY(e.touches[0].clientY)
+  }
+
+  function handleTouchEnd(e: React.TouchEvent) {
+    if (touchStartX === null || touchStartY === null) return
+    const dx = touchStartX - e.changedTouches[0].clientX
+    const dy = Math.abs(touchStartY - e.changedTouches[0].clientY)
+    if (Math.abs(dx) > 50 && dy < 60) {
+      setWeekOffset((o) => o + (dx > 0 ? 1 : -1))
+    }
+    setTouchStartX(null)
+    setTouchStartY(null)
+  }
 
   function isForPerson(event: CalendarEvent, personId: string): boolean {
     if (event.participants?.length) {
@@ -242,7 +273,11 @@ export default function WeeklyCalendar({
       </div>
 
       {/* Day columns */}
-      <div className={`grid grid-cols-7 gap-1 transition-opacity duration-150 ${loading ? 'opacity-40' : 'opacity-100'}`}>
+      <div
+        className={`grid grid-cols-7 gap-1 transition-opacity duration-150 ${loading ? 'opacity-40' : 'opacity-100'}`}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
         {weekDays.map((day, idx) => {
           const isToday = isSameDay(day, new Date())
           const dayEvents = displayedEvents.filter((e) => isSameDay(e.startAt, day))
@@ -271,16 +306,16 @@ export default function WeeklyCalendar({
 
               {/* Weather strip */}
               <div
-                className="flex flex-col items-center mb-2 min-h-[26px]"
-                title={w ? `${w.tempMax}° · ${w.rain.toFixed(1)} mm · ${w.wind} km/h` : ''}
+                className="flex flex-col items-center mb-2 min-h-[42px]"
+                title={w ? `${w.tempMax}° · ${w.rain.toFixed(1)} mm nedbør · ${w.wind} km/h vind` : ''}
               >
                 {w && (
                   <>
-                    <span className="text-xs font-semibold text-gray-500 leading-none">{w.tempMax}°</span>
-                    <div className="flex items-center gap-0.5 mt-0.5">
-                      {w.rain > 0.5 && <Droplets size={9} className="text-blue-400" />}
-                      {w.wind > 20 && <Wind size={9} className="text-gray-400" />}
-                    </div>
+                    <span className="text-base leading-none">{weatherEmoji(w.code)}</span>
+                    <span className="text-xs font-bold text-gray-700 mt-0.5 leading-none">{w.tempMax}°</span>
+                    {w.rain > 0.5 && (
+                      <span className="text-[10px] font-semibold text-blue-500 leading-none mt-0.5">{w.rain.toFixed(0)}mm</span>
+                    )}
                   </>
                 )}
               </div>
@@ -288,7 +323,7 @@ export default function WeeklyCalendar({
               {/* Events + hover add button */}
               <div className="flex flex-col gap-1.5 min-h-[60px]">
                 {dayEvents.map((event) => (
-                  <EventPill key={event.id} event={event} onClick={setSelectedEvent} />
+                  <EventPill key={event.id} event={event} onClick={setSelectedEvent} tooltipSide={idx >= 4 ? 'right' : 'left'} />
                 ))}
                 <a
                   href={`/tilfoej?date=${format(day, 'yyyy-MM-dd')}`}
