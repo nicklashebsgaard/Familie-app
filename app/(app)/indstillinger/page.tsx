@@ -13,6 +13,7 @@ import {
 import { signOut } from '@/app/login/actions'
 import AvatarUpload from '@/components/AvatarUpload'
 import RoleSelect from '@/components/RoleSelect'
+import CopyButton from '@/components/CopyButton'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? ''
 
@@ -261,15 +262,7 @@ export default async function IndstillingerPage() {
                     value={`${SITE_URL}/join/${t.token}`}
                     className="flex-1 text-xs px-2 py-1.5 border border-gray-200 rounded bg-gray-50 font-mono truncate"
                   />
-                  <button
-                    type="button"
-                    onClick={() =>
-                      navigator.clipboard.writeText(`${SITE_URL}/join/${t.token}`)
-                    }
-                    className="text-xs text-indigo-600 hover:underline whitespace-nowrap"
-                  >
-                    Kopiér
-                  </button>
+                  <CopyButton text={`${SITE_URL}/join/${t.token}`} />
                 </div>
               ))}
             </div>
