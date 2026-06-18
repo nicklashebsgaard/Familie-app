@@ -1,8 +1,10 @@
+create extension if not exists pgcrypto;
+
 -- Invitation tokens for family join links
 create table public.invite_tokens (
-  id          uuid primary key default uuid_generate_v4(),
+  id          uuid primary key default gen_random_uuid(),
   family_id   uuid not null references public.families(id) on delete cascade,
-  token       text not null unique default encode(gen_random_bytes(16), 'hex'),
+  token       text not null unique default replace(gen_random_uuid()::text, '-', ''),
   created_by  uuid references auth.users(id),
   expires_at  timestamptz not null default (now() + interval '7 days'),
   used_at     timestamptz,
@@ -32,7 +34,7 @@ create policy "invite_tokens: admins can delete"
 
 -- push_subscriptions for web push notifications (Phase 5)
 create table public.push_subscriptions (
-  id          uuid primary key default uuid_generate_v4(),
+  id          uuid primary key default gen_random_uuid(),
   user_id     uuid not null references public.users(id) on delete cascade,
   family_id   uuid not null references public.families(id) on delete cascade,
   endpoint    text not null unique,

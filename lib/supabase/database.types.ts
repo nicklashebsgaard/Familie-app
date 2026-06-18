@@ -1,6 +1,3 @@
-// Placeholder types — regenerate after connecting to Supabase:
-//   npx supabase gen types typescript --linked > lib/supabase/database.types.ts
-
 export type Json =
   | string
   | number
@@ -10,222 +7,307 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.5"
+  }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
-      families: {
+      aula_feeds: {
         Row: {
-          id: string
-          name: string
-          created_by: string | null
+          child_name: string
           created_at: string
+          family_id: string
+          ics_url: string
+          id: string
+          last_error: string | null
+          last_event_count: number | null
+          last_synced_at: string | null
+          user_id: string
         }
         Insert: {
-          id?: string
-          name: string
-          created_by?: string | null
+          child_name: string
           created_at?: string
+          family_id: string
+          ics_url: string
+          id?: string
+          last_error?: string | null
+          last_event_count?: number | null
+          last_synced_at?: string | null
+          user_id: string
         }
         Update: {
+          child_name?: string
+          created_at?: string
+          family_id?: string
+          ics_url?: string
           id?: string
-          name?: string
-          created_by?: string | null
-          created_at?: string
+          last_error?: string | null
+          last_event_count?: number | null
+          last_synced_at?: string | null
+          user_id?: string
         }
-        Relationships: []
-      }
-      users: {
-        Row: {
-          id: string
-          email: string
-          name: string
-          color: string
-          role: 'admin' | 'member' | 'guest'
-          family_id: string | null
-          created_at: string
-        }
-        Insert: {
-          id: string
-          email: string
-          name: string
-          color?: string
-          role?: 'admin' | 'member' | 'guest'
-          family_id?: string | null
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          email?: string
-          name?: string
-          color?: string
-          role?: 'admin' | 'member' | 'guest'
-          family_id?: string | null
-          created_at?: string
-        }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "aula_feeds_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aula_feeds_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       events: {
         Row: {
-          id: string
-          family_id: string
-          user_id: string
-          title: string
-          description: string | null
-          location: string | null
-          start_at: string
-          end_at: string
           all_day: boolean
-          recurring: Json | null
-          source: 'manual' | 'aula'
           aula_uid: string | null
-          transport: string | null
           created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          family_id: string
-          user_id: string
-          title: string
-          description?: string | null
-          location?: string | null
-          start_at: string
+          description: string | null
           end_at: string
-          all_day?: boolean
-          recurring?: Json | null
-          source?: 'manual' | 'aula'
-          aula_uid?: string | null
-          transport?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          family_id?: string
-          user_id?: string
-          title?: string
-          description?: string | null
-          location?: string | null
-          start_at?: string
-          end_at?: string
-          all_day?: boolean
-          recurring?: Json | null
-          source?: 'manual' | 'aula'
-          aula_uid?: string | null
-          transport?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      aula_feeds: {
-        Row: {
-          id: string
           family_id: string
+          id: string
+          location: string | null
+          recurring: Json | null
+          source: string
+          start_at: string
+          title: string
+          transport: string | null
+          updated_at: string
           user_id: string
-          child_name: string
-          ics_url: string
-          last_synced_at: string | null
-          last_event_count: number | null
-          last_error: string | null
-          created_at: string
         }
         Insert: {
-          id?: string
-          family_id: string
-          user_id: string
-          child_name: string
-          ics_url: string
-          last_synced_at?: string | null
-          last_event_count?: number | null
-          last_error?: string | null
+          all_day?: boolean
+          aula_uid?: string | null
           created_at?: string
+          description?: string | null
+          end_at: string
+          family_id: string
+          id?: string
+          location?: string | null
+          recurring?: Json | null
+          source?: string
+          start_at: string
+          title: string
+          transport?: string | null
+          updated_at?: string
+          user_id: string
         }
         Update: {
-          id?: string
-          family_id?: string
-          user_id?: string
-          child_name?: string
-          ics_url?: string
-          last_synced_at?: string | null
-          last_event_count?: number | null
-          last_error?: string | null
+          all_day?: boolean
+          aula_uid?: string | null
           created_at?: string
+          description?: string | null
+          end_at?: string
+          family_id?: string
+          id?: string
+          location?: string | null
+          recurring?: Json | null
+          source?: string
+          start_at?: string
+          title?: string
+          transport?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "events_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      families: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
         }
         Relationships: []
       }
       invite_tokens: {
         Row: {
-          id: string
-          family_id: string
-          token: string
+          created_at: string
           created_by: string | null
           expires_at: string
+          family_id: string
+          id: string
+          token: string
           used_at: string | null
-          created_at: string
         }
         Insert: {
-          id?: string
-          family_id: string
-          token?: string
+          created_at?: string
           created_by?: string | null
           expires_at?: string
+          family_id: string
+          id?: string
+          token?: string
           used_at?: string | null
-          created_at?: string
         }
         Update: {
-          id?: string
-          family_id?: string
-          token?: string
+          created_at?: string
           created_by?: string | null
           expires_at?: string
+          family_id?: string
+          id?: string
+          token?: string
           used_at?: string | null
-          created_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "invite_tokens_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       push_subscriptions: {
         Row: {
-          id: string
-          user_id: string
-          family_id: string
-          endpoint: string
-          p256dh: string
           auth: string
           created_at: string
+          endpoint: string
+          family_id: string
+          id: string
+          p256dh: string
+          user_id: string
         }
         Insert: {
-          id?: string
-          user_id: string
-          family_id: string
-          endpoint: string
-          p256dh: string
           auth: string
           created_at?: string
+          endpoint: string
+          family_id: string
+          id?: string
+          p256dh: string
+          user_id: string
         }
         Update: {
-          id?: string
-          user_id?: string
-          family_id?: string
-          endpoint?: string
-          p256dh?: string
           auth?: string
           created_at?: string
+          endpoint?: string
+          family_id?: string
+          id?: string
+          p256dh?: string
+          user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "push_subscriptions_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "push_subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      users: {
+        Row: {
+          color: string
+          created_at: string
+          email: string
+          family_id: string | null
+          id: string
+          name: string
+          role: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          email: string
+          family_id?: string | null
+          id: string
+          name: string
+          role?: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          email?: string
+          family_id?: string | null
+          id?: string
+          name?: string
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "users_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      current_family_id: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      current_role: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      current_family_id: { Args: never; Returns: string }
+      current_role: { Args: never; Returns: string }
     }
     Enums: {
       [_ in never]: never
@@ -236,42 +318,128 @@ export type Database = {
   }
 }
 
-type PublicSchema = Database[Extract<keyof Database, 'public'>]
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
-  PublicTableNameOrOptions extends
-    | keyof (PublicSchema['Tables'] & PublicSchema['Views'])
-    | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof (Database[PublicTableNameOrOptions['schema']]['Tables'] &
-        Database[PublicTableNameOrOptions['schema']]['Views'])
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? (Database[PublicTableNameOrOptions['schema']]['Tables'] &
-      Database[PublicTableNameOrOptions['schema']]['Views'])[TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
     : never
-  : PublicTableNameOrOptions extends keyof (PublicSchema['Tables'] &
-        PublicSchema['Views'])
-    ? (PublicSchema['Tables'] &
-        PublicSchema['Views'])[PublicTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
         Row: infer R
       }
       ? R
       : never
     : never
 
-export type Enums<
-  PublicEnumNameOrOptions extends
-    | keyof PublicSchema['Enums']
-    | { schema: keyof Database },
-  EnumName extends PublicEnumNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicEnumNameOrOptions['schema']]['Enums']
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = PublicEnumNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicEnumNameOrOptions['schema']]['Enums'][EnumName]
-  : PublicEnumNameOrOptions extends keyof PublicSchema['Enums']
-    ? PublicSchema['Enums'][PublicEnumNameOrOptions]
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
     : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
+  public: {
+    Enums: {},
+  },
+} as const

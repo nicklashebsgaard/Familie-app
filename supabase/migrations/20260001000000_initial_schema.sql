@@ -1,9 +1,6 @@
--- Enable UUID extension
-create extension if not exists "uuid-ossp";
-
 -- ─── FAMILIES ───────────────────────────────────────────────────────────────
 create table public.families (
-  id          uuid primary key default uuid_generate_v4(),
+  id          uuid primary key default gen_random_uuid(),
   name        text not null,
   created_by  uuid references auth.users(id) on delete set null,
   created_at  timestamptz not null default now()
@@ -23,7 +20,7 @@ create table public.users (
 
 -- ─── EVENTS ─────────────────────────────────────────────────────────────────
 create table public.events (
-  id            uuid primary key default uuid_generate_v4(),
+  id            uuid primary key default gen_random_uuid(),
   family_id     uuid not null references public.families(id) on delete cascade,
   user_id       uuid not null references public.users(id) on delete cascade,
   title         text not null,
@@ -44,7 +41,7 @@ create table public.events (
 
 -- ─── AULA FEEDS ─────────────────────────────────────────────────────────────
 create table public.aula_feeds (
-  id               uuid primary key default uuid_generate_v4(),
+  id               uuid primary key default gen_random_uuid(),
   family_id        uuid not null references public.families(id) on delete cascade,
   user_id          uuid not null references public.users(id) on delete cascade,
   child_name       text not null,
