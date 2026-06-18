@@ -8,16 +8,22 @@ export async function GET(request: NextRequest) {
   const code = searchParams.get('code')
   const token_hash = searchParams.get('token_hash')
   const type = searchParams.get('type') as EmailOtpType | null
-  const next = searchParams.get('next') ?? '/'
+  const next =
+    searchParams.get('next') ??
+    request.cookies.get('post-login-redirect')?.value ??
+    '/'
 
   const supabase = createClient()
+
+  const redirectTo = NextResponse.redirect(`${origin}${next}`)
+  redirectTo.cookies.delete('post-login-redirect')
 
   // PKCE flow (OAuth + magic link on same browser)
   if (code) {
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) {
       await ensureProfile(supabase)
-      return NextResponse.redirect(`${origin}${next}`)
+      return redirectTo
     }
   }
 
@@ -26,7 +32,7 @@ export async function GET(request: NextRequest) {
     const { error } = await supabase.auth.verifyOtp({ type, token_hash })
     if (!error) {
       await ensureProfile(supabase)
-      return NextResponse.redirect(`${origin}${next}`)
+      return redirectTo
     }
   }
 

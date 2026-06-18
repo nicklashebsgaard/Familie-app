@@ -12,6 +12,7 @@ import {
 } from './actions'
 import { signOut } from '@/app/login/actions'
 import AvatarUpload from '@/components/AvatarUpload'
+import RoleSelect from '@/components/RoleSelect'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? ''
 
@@ -154,19 +155,11 @@ export default async function IndstillingerPage() {
 
               {/* Role selector (admin only, not self) */}
               {isAdmin && m.id !== user.id && (
-                <form action={updateMemberRole}>
-                  <input type="hidden" name="member_id" value={m.id} />
-                  <select
-                    name="role"
-                    defaultValue={m.role}
-                    className="text-xs border border-gray-200 rounded px-1 py-0.5 bg-white"
-                    onChange={(e) => e.currentTarget.form?.requestSubmit()}
-                  >
-                    <option value="admin">Admin</option>
-                    <option value="member">Medlem</option>
-                    <option value="guest">Gæst</option>
-                  </select>
-                </form>
+                <RoleSelect
+                  memberId={m.id}
+                  currentRole={m.role}
+                  updateAction={updateMemberRole}
+                />
               )}
             </div>
           ))}

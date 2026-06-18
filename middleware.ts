@@ -43,7 +43,15 @@ export async function middleware(request: NextRequest) {
   if (!user && !isPublic) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
-    return NextResponse.redirect(url)
+    const response = NextResponse.redirect(url)
+    // Store the intended destination so auth callback can redirect there after login
+    response.cookies.set('post-login-redirect', pathname, {
+      path: '/',
+      maxAge: 600, // 10 minutes
+      httpOnly: true,
+      sameSite: 'lax',
+    })
+    return response
   }
 
   return supabaseResponse
