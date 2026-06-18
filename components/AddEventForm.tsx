@@ -26,17 +26,16 @@ export default function AddEventForm({
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [allDay, setAllDay] = useState(editEvent?.allDay ?? false)
 
   const isEdit = !!editEvent
   const today = defaultDate ?? new Date().toISOString().split('T')[0]
 
-  // Build the full people list for chips
   const allPeople = [
     ...members.map((m) => ({ value: `auth:${m.id}`, name: m.name, color: m.color, avatarUrl: m.avatarUrl })),
     ...managedMembers.map((m) => ({ value: `managed:${m.id}`, name: m.name, color: m.color, avatarUrl: m.avatarUrl })),
   ]
 
-  // Initial participants from editEvent or default to current user
   const initialParticipants = (() => {
     if (!editEvent) return [`auth:${currentUserId}`]
     if (editEvent.participants?.length) {
@@ -62,27 +61,23 @@ export default function AddEventForm({
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    if (participants.length === 0) {
-      setError('Vælg mindst én person')
-      return
-    }
+    if (participants.length === 0) { setError('Vælg mindst én person'); return }
     setLoading(true)
     setError(null)
 
     const form = new FormData(e.currentTarget)
-    const allDay = form.get('all_day') === 'on'
+    const isAllDay = allDay
     const startDate = form.get('start_date') as string
-    const startTime = form.get('start_time') as string
-    const endTime = form.get('end_time') as string
+    const startTime = (form.get('start_time') as string) || '00:00'
+    const endTime = (form.get('end_time') as string) || '23:59'
 
-    const startAt = allDay
+    const startAt = isAllDay
       ? new Date(`${startDate}T00:00:00`).toISOString()
       : new Date(`${startDate}T${startTime}:00`).toISOString()
-    const endAt = allDay
+    const endAt = isAllDay
       ? new Date(`${startDate}T23:59:59`).toISOString()
       : new Date(`${startDate}T${endTime}:00`).toISOString()
 
-    // Derive user_id and managed_member_id from participants for backward compat
     const firstAuth = participants.find((p) => p.startsWith('auth:'))
     const firstManaged = participants.find((p) => p.startsWith('managed:'))
     const userId = firstAuth ? firstAuth.split(':')[1] : currentUserId
@@ -100,7 +95,7 @@ export default function AddEventForm({
       transport: (form.get('transport') as string) || null,
       start_at: startAt,
       end_at: endAt,
-      all_day: allDay,
+      all_day: isAllDay,
       source: 'manual',
     }
 
@@ -126,17 +121,18 @@ export default function AddEventForm({
   const defaultEndTime = editEvent && !editEvent.allDay ? format(editEvent.endAt, 'HH:mm') : '09:00'
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-3 pb-6">
+
       {error && (
-        <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+        <div className="p-4 bg-red-50 border border-red-100 rounded-2xl text-red-700 text-sm font-medium">
           {error}
         </div>
       )}
 
-      {/* Title */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Titel <span className="text-red-500">*</span>
+      {/* Titel */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 px-4 py-4">
+        <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest block mb-2">
+          Titel <span className="text-red-400">*</span>
         </label>
         <input
           name="title"
@@ -144,20 +140,20 @@ export default function AddEventForm({
           required
           defaultValue={editEvent?.title}
           placeholder="fx Fodboldtræning"
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="w-full text-gray-900 text-base placeholder-gray-300 outline-none"
         />
       </div>
 
-      {/* Participants */}
-      <div>
-        <div className="flex items-center justify-between mb-2">
-          <label className="text-sm font-medium text-gray-700">
-            For hvem? <span className="text-red-500">*</span>
+      {/* For hvem */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 px-4 py-4">
+        <div className="flex items-center justify-between mb-3">
+          <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">
+            For hvem <span className="text-red-400">*</span>
           </label>
           <button
             type="button"
             onClick={selectAll}
-            className="text-xs text-indigo-600 hover:underline"
+            className="text-xs text-indigo-600 font-semibold"
           >
             Vælg alle
           </button>
@@ -170,14 +166,12 @@ export default function AddEventForm({
                 key={p.value}
                 type="button"
                 onClick={() => toggle(p.value)}
-                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border-2 text-sm font-medium transition-all ${
-                  active
-                    ? 'border-transparent text-white'
-                    : 'border-gray-200 text-gray-600 bg-white hover:border-gray-300'
+                className={`flex items-center gap-2 px-3 py-2 rounded-full text-sm font-semibold transition-all active:scale-95 ${
+                  active ? 'text-white' : 'bg-gray-100 text-gray-600'
                 }`}
                 style={active ? { backgroundColor: p.color } : {}}
               >
-                <Avatar name={p.name} color={p.color} avatarUrl={p.avatarUrl} size={18} />
+                <Avatar name={p.name} color={p.color} avatarUrl={p.avatarUrl} size={20} />
                 {p.name}
               </button>
             )
@@ -185,96 +179,98 @@ export default function AddEventForm({
         </div>
       </div>
 
-      {/* Date */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Dato <span className="text-red-500">*</span>
-        </label>
-        <input
-          name="start_date"
-          type="date"
-          required
-          defaultValue={defaultStartDate}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-        />
-      </div>
+      {/* Hvornår */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 divide-y divide-gray-100">
 
-      {/* All day */}
-      <div className="flex items-center gap-2">
-        <input
-          id="all_day"
-          name="all_day"
-          type="checkbox"
-          defaultChecked={editEvent?.allDay}
-          className="w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
-        />
-        <label htmlFor="all_day" className="text-sm font-medium text-gray-700">
-          Hele dagen
-        </label>
-      </div>
-
-      {/* Time */}
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Start</label>
+        {/* Dato */}
+        <div className="px-4 py-4">
+          <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest block mb-2">
+            Dato <span className="text-red-400">*</span>
+          </label>
           <input
-            name="start_time"
-            type="time"
-            defaultValue={defaultStartTime}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            name="start_date"
+            type="date"
+            required
+            defaultValue={defaultStartDate}
+            className="w-full text-gray-900 text-base outline-none"
           />
         </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Slut</label>
+
+        {/* Hele dagen toggle */}
+        <div
+          className="px-4 py-4 flex items-center justify-between cursor-pointer select-none"
+          onClick={() => setAllDay((v) => !v)}
+        >
+          <span className="text-base text-gray-800 font-medium">Hele dagen</span>
+          <div className={`relative w-12 h-7 rounded-full transition-colors duration-200 ${allDay ? 'bg-indigo-600' : 'bg-gray-200'}`}>
+            <div className={`absolute top-1 w-5 h-5 bg-white rounded-full shadow-sm transition-transform duration-200 ${allDay ? 'left-6' : 'left-1'}`} />
+          </div>
+        </div>
+
+        {/* Tidspunkter */}
+        {!allDay && (
+          <div className="px-4 py-4 grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest block mb-2">Start</label>
+              <input
+                name="start_time"
+                type="time"
+                defaultValue={defaultStartTime}
+                className="w-full text-gray-900 text-base outline-none"
+              />
+            </div>
+            <div>
+              <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest block mb-2">Slut</label>
+              <input
+                name="end_time"
+                type="time"
+                defaultValue={defaultEndTime}
+                className="w-full text-gray-900 text-base outline-none"
+              />
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Detaljer */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 divide-y divide-gray-100">
+        <div className="px-4 py-4">
+          <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest block mb-2">Sted</label>
           <input
-            name="end_time"
-            type="time"
-            defaultValue={defaultEndTime}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            name="location"
+            type="text"
+            defaultValue={editEvent?.location}
+            placeholder="fx Hallen, Skole..."
+            className="w-full text-gray-900 text-base placeholder-gray-300 outline-none"
+          />
+        </div>
+        <div className="px-4 py-4">
+          <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest block mb-2">Kørsel / transport</label>
+          <input
+            name="transport"
+            type="text"
+            defaultValue={editEvent?.transport}
+            placeholder="fx Hentes kl. 16:00"
+            className="w-full text-gray-900 text-base placeholder-gray-300 outline-none"
+          />
+        </div>
+        <div className="px-4 py-4">
+          <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest block mb-2">Bemærkninger</label>
+          <textarea
+            name="description"
+            rows={3}
+            defaultValue={editEvent?.description}
+            placeholder="Valgfri beskrivelse..."
+            className="w-full text-gray-900 text-base placeholder-gray-300 outline-none resize-none"
           />
         </div>
       </div>
 
-      {/* Location */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Sted</label>
-        <input
-          name="location"
-          type="text"
-          defaultValue={editEvent?.location}
-          placeholder="fx Hallen, Skole..."
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-        />
-      </div>
-
-      {/* Transport */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Kørsel / transport</label>
-        <input
-          name="transport"
-          type="text"
-          defaultValue={editEvent?.transport}
-          placeholder="fx Hentes kl. 16:00"
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-        />
-      </div>
-
-      {/* Description */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Bemærkninger</label>
-        <textarea
-          name="description"
-          rows={2}
-          defaultValue={editEvent?.description}
-          placeholder="Valgfri beskrivelse..."
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
-        />
-      </div>
-
+      {/* Knapper */}
       <button
         type="submit"
         disabled={loading || participants.length === 0}
-        className="w-full py-3 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-semibold text-base hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors active:scale-[0.98]"
       >
         {loading ? 'Gemmer...' : isEdit ? 'Opdater begivenhed' : 'Tilføj begivenhed'}
       </button>
@@ -283,7 +279,7 @@ export default function AddEventForm({
         <button
           type="button"
           onClick={() => router.back()}
-          className="w-full py-2.5 border border-gray-200 text-gray-600 rounded-xl text-sm hover:bg-gray-50 transition-colors"
+          className="w-full py-4 border border-gray-200 text-gray-600 rounded-2xl text-base font-medium hover:bg-gray-50 transition-colors"
         >
           Annullér
         </button>

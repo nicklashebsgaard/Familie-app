@@ -7,7 +7,6 @@ interface Props {
 }
 
 export default function EventPill({ event, onClick }: Props) {
-  // Primary person for color — first participant, or managed member, or member
   const allParticipants = event.participants?.length
     ? event.participants
     : [event.managedMember ?? event.member].filter(Boolean)
@@ -16,7 +15,6 @@ export default function EventPill({ event, onClick }: Props) {
   const color = primaryPerson?.color ?? '#6366f1'
   const time = event.allDay ? null : format(event.startAt, 'HH:mm')
 
-  // Show up to 3 initials
   const initials = allParticipants
     .slice(0, 3)
     .map((p) => p?.name?.[0]?.toUpperCase() ?? '?')
@@ -28,17 +26,16 @@ export default function EventPill({ event, onClick }: Props) {
       className="w-full text-left rounded-lg overflow-hidden active:scale-95 transition-transform"
       style={{ backgroundColor: color }}
     >
-      <div className="px-1.5 py-1.5 relative">
+      <div className="px-2 py-2 relative">
         {time && (
-          <span className="text-white/80 block text-[10px] leading-none mb-0.5 font-semibold tracking-tight">
+          <span className="text-white/80 block text-[11px] leading-none mb-0.5 font-semibold tracking-tight">
             {time}
           </span>
         )}
-        <span className="text-white text-[12px] font-bold leading-tight block pr-5 truncate">
+        <span className="text-white text-[13px] font-bold leading-tight block pr-5 truncate">
           {event.title}
         </span>
-        {/* Participant initials — stacked right */}
-        <div className="absolute bottom-1 right-1 flex flex-row-reverse">
+        <div className="absolute bottom-1.5 right-1.5 flex flex-row-reverse">
           {initials.map((initial, i) => (
             <span
               key={i}

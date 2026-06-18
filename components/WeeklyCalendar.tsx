@@ -258,13 +258,13 @@ export default function WeeklyCalendar({
                   {format(day, 'EEE', { locale: da })}
                 </span>
                 <span
-                  className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-base font-bold ${
+                  className={`inline-flex items-center justify-center w-9 h-9 rounded-full text-lg font-bold ${
                     isToday ? 'bg-indigo-600 text-white' : 'text-gray-900'
                   }`}
                 >
                   {format(day, 'd')}
                 </span>
-                <span className={`text-[11px] font-medium block leading-none mt-0.5 ${isToday ? 'text-indigo-500' : 'text-gray-400'}`}>
+                <span className={`text-xs font-medium block leading-none mt-0.5 ${isToday ? 'text-indigo-500' : 'text-gray-400'}`}>
                   {showMonth ? format(day, 'MMM', { locale: da }) : ' '}
                 </span>
               </div>
@@ -276,7 +276,7 @@ export default function WeeklyCalendar({
               >
                 {w && (
                   <>
-                    <span className="text-[11px] font-semibold text-gray-500 leading-none">{w.tempMax}°</span>
+                    <span className="text-xs font-semibold text-gray-500 leading-none">{w.tempMax}°</span>
                     <div className="flex items-center gap-0.5 mt-0.5">
                       {w.rain > 0.5 && <Droplets size={9} className="text-blue-400" />}
                       {w.wind > 20 && <Wind size={9} className="text-gray-400" />}
@@ -286,13 +286,13 @@ export default function WeeklyCalendar({
               </div>
 
               {/* Events + hover add button */}
-              <div className="flex flex-col gap-1 flex-1 min-h-[40px]">
+              <div className="flex flex-col gap-1.5 min-h-[60px]">
                 {dayEvents.map((event) => (
                   <EventPill key={event.id} event={event} onClick={setSelectedEvent} />
                 ))}
                 <a
                   href={`/tilfoej?date=${format(day, 'yyyy-MM-dd')}`}
-                  className="mt-auto flex items-center justify-center py-1 opacity-0 group-hover/day:opacity-100 transition-opacity"
+                  className="flex items-center justify-center py-0.5 opacity-0 group-hover/day:opacity-100 transition-opacity"
                   aria-label="Tilføj begivenhed"
                 >
                   <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-indigo-100 hover:bg-indigo-200 transition-colors">
