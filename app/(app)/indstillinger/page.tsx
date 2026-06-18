@@ -14,6 +14,7 @@ import { signOut } from '@/app/login/actions'
 import AvatarUpload from '@/components/AvatarUpload'
 import RoleSelect from '@/components/RoleSelect'
 import CopyButton from '@/components/CopyButton'
+import GuestLinkManager from '@/components/GuestLinkManager'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? ''
 
@@ -278,6 +279,9 @@ export default async function IndstillingerPage() {
           <p className="text-xs text-gray-400 mt-1">Links udløber efter 7 dage</p>
         </section>
       )}
+
+      {/* Guest links */}
+      {isAdmin && <GuestLinkManager />}
 
       {/* Aula feeds */}
       {isAdmin && (

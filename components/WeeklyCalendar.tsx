@@ -431,7 +431,7 @@ export default function WeeklyCalendar({
 
               {/* Weather strip */}
               <div
-                className="flex flex-col items-center mb-2 min-h-[42px] sm:min-h-[60px]"
+                className="flex flex-col items-center justify-center mb-2 h-[48px] sm:h-[64px]"
                 title={w ? `${w.tempMax}° · ${w.rain.toFixed(1)} mm nedbør · ${w.wind} km/h vind` : ''}
               >
                 {w && (

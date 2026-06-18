@@ -30,13 +30,13 @@ export default function EventPill({ event, onClick, tooltipSide = 'left' }: Prop
         className="w-full text-left rounded-xl overflow-hidden active:scale-95 transition-transform"
         style={{ backgroundColor: color }}
       >
-        <div className="px-2.5 pt-2 pb-8 sm:px-3 sm:pt-2.5 sm:pb-9 relative min-h-[52px] sm:min-h-[60px]">
+        <div className="px-2 pt-1.5 pb-7 sm:px-2.5 sm:pt-2 sm:pb-7 relative min-h-[44px] sm:min-h-[50px]">
           {time && (
-            <span className="text-white/80 block text-[11px] sm:text-xs leading-none mb-1 font-semibold tracking-tight">
+            <span className="text-white/80 block text-[10px] sm:text-[11px] leading-none mb-0.5 font-semibold tracking-tight">
               {time}
             </span>
           )}
-          <span className="text-white text-[13px] sm:text-sm font-bold leading-snug block truncate">
+          <span className="text-white text-[12px] sm:text-[13px] font-bold leading-snug block truncate">
             {event.title}
           </span>
         </div>

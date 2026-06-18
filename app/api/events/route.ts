@@ -35,7 +35,7 @@ function expandRecurring(baseEvent: Record<string, unknown>): Record<string, unk
 async function sendFamilyPush(familyId: string, title: string, body: string) {
   if (!process.env.VAPID_PRIVATE_KEY || !process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY) return
   webpush.setVapidDetails(
-    process.env.VAPID_SUBJECT || 'mailto:admin@famille.app',
+    process.env.VAPID_MAILTO || 'mailto:admin@famille.app',
     process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
     process.env.VAPID_PRIVATE_KEY,
   )
