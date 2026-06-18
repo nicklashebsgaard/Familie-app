@@ -4,11 +4,17 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { addWeeks, subWeeks, format, isSameDay, parseISO, getISOWeek, startOfWeek, endOfWeek } from 'date-fns'
 import { da } from 'date-fns/locale'
-import { ChevronLeft, ChevronRight, Plus } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Plus, Droplets, Wind } from 'lucide-react'
 import type { CalendarEvent, FamilyMember, ManagedMember } from '@/lib/types'
 import EventPill from './EventPill'
 import EventSheet from './EventSheet'
 import Avatar from './Avatar'
+
+interface WeatherData {
+  tempMax: number
+  rain: number
+  wind: number
+}
 
 interface Props {
   initialEvents: CalendarEvent[]
@@ -46,9 +52,10 @@ export default function WeeklyCalendar({
   const [weekDays, setWeekDays] = useState(initialWeekDays)
   const [loading, setLoading] = useState(false)
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null)
+  const [filteredPersonId, setFilteredPersonId] = useState<string | null>(null)
+  const [weather, setWeather] = useState<Record<string, WeatherData>>({})
 
   const isAdmin = members.find((m) => m.id === currentUserId)?.role === 'admin'
-
   const membersById = new Map(members.map((m) => [m.id, m]))
   const managedById = new Map(managedMembers.map((m) => [m.id, m]))
 
@@ -87,7 +94,6 @@ export default function WeeklyCalendar({
     setWeekDays(days)
 
     if (weekOffset === 0) {
-      // Initial data from server is already correct for week 0
       setEvents(initialEvents)
       return
     }
@@ -100,17 +106,14 @@ export default function WeeklyCalendar({
 
     fetch(`/api/events?from=${from}&to=${to}`)
       .then((r) => r.json())
-      .then((rows: Record<string, unknown>[]) => {
-        setEvents(rows.map(rowToEvent))
-      })
+      .then((rows: Record<string, unknown>[]) => setEvents(rows.map(rowToEvent)))
       .finally(() => setLoading(false))
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [weekOffset, familyId])
 
-  // Realtime subscription — reflects live changes for the visible week
+  // Realtime subscription
   useEffect(() => {
     if (!familyId) return
-
     const supabase = createClient()
     const channel = supabase
       .channel('events-realtime')
@@ -121,16 +124,13 @@ export default function WeeklyCalendar({
           if (payload.eventType === 'INSERT') {
             const row = payload.new as Record<string, unknown>
             const newEvent = rowToEvent(row)
-            // Only add if it falls in the currently displayed week
             if (weekDays.some((d) => isSameDay(newEvent.startAt, d))) {
               setEvents((prev) => [...prev, newEvent])
             }
           }
           if (payload.eventType === 'UPDATE') {
             const row = payload.new as Record<string, unknown>
-            setEvents((prev) =>
-              prev.map((e) => (e.id === row.id ? rowToEvent(row) : e))
-            )
+            setEvents((prev) => prev.map((e) => (e.id === row.id ? rowToEvent(row) : e)))
           }
           if (payload.eventType === 'DELETE') {
             setEvents((prev) =>
@@ -140,17 +140,72 @@ export default function WeeklyCalendar({
         }
       )
       .subscribe()
-
     return () => { supabase.removeChannel(channel) }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [familyId, members, managedMembers, weekDays])
 
-  const weekNumber = getISOWeek(weekDays[0])
+  // Fetch weather once on mount — covers past 7 + next 14 days
+  useEffect(() => {
+    function loadWeather(lat: number, lon: number) {
+      fetch(
+        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
+        `&daily=temperature_2m_max,precipitation_sum,windspeed_10m_max` +
+        `&timezone=auto&past_days=7&forecast_days=14`
+      )
+        .then((r) => r.json())
+        .then((data) => {
+          if (!data.daily) return
+          const map: Record<string, WeatherData> = {}
+          ;(data.daily.time as string[]).forEach((date: string, i: number) => {
+            map[date] = {
+              tempMax: Math.round(data.daily.temperature_2m_max[i]),
+              rain: data.daily.precipitation_sum[i] ?? 0,
+              wind: Math.round(data.daily.windspeed_10m_max[i] ?? 0),
+            }
+          })
+          setWeather(map)
+        })
+        .catch(() => {})
+    }
 
+    try {
+      const cached = localStorage.getItem('famille-coords')
+      if (cached) {
+        const { lat, lon } = JSON.parse(cached)
+        loadWeather(lat, lon)
+        return
+      }
+    } catch {}
+
+    if (!navigator.geolocation) { loadWeather(55.67, 12.57); return }
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const c = { lat: pos.coords.latitude, lon: pos.coords.longitude }
+        try { localStorage.setItem('famille-coords', JSON.stringify(c)) } catch {}
+        loadWeather(c.lat, c.lon)
+      },
+      () => loadWeather(55.67, 12.57),
+      { timeout: 5000 }
+    )
+  }, [])
+
+  function isForPerson(event: CalendarEvent, personId: string): boolean {
+    if (event.participants?.length) {
+      return event.participants.some((p) => p.id === personId)
+    }
+    return event.userId === personId || event.managedMemberId === personId
+  }
+
+  const allPeople = [...members, ...managedMembers]
+  const displayedEvents = filteredPersonId
+    ? events.filter((e) => isForPerson(e, filteredPersonId))
+    : events
+
+  const weekNumber = getISOWeek(weekDays[0])
   const weekLabel = (() => {
     const start = weekDays[0]
     const end = weekDays[6]
-    // If week spans two months, show both
     if (start.getMonth() !== end.getMonth()) {
       return `${format(start, 'd. MMM', { locale: da })} – ${format(end, 'd. MMM', { locale: da })}`
     }
@@ -160,11 +215,9 @@ export default function WeeklyCalendar({
     return format(start, 'MMMM yyyy', { locale: da })
   })()
 
-  const totalEvents = events.length
-
   return (
     <div className="pt-4">
-      {/* Week navigation header */}
+      {/* Week navigation */}
       <div className="flex items-center justify-between mb-4 px-1">
         <button
           onClick={() => setWeekOffset((o) => o - 1)}
@@ -192,14 +245,15 @@ export default function WeeklyCalendar({
       <div className={`grid grid-cols-7 gap-1 transition-opacity duration-150 ${loading ? 'opacity-40' : 'opacity-100'}`}>
         {weekDays.map((day, idx) => {
           const isToday = isSameDay(day, new Date())
-          const dayEvents = events.filter((e) => isSameDay(e.startAt, day))
-          // Show month label on the 1st of a month, or on Monday if week starts in a new month vs prev week
+          const dayEvents = displayedEvents.filter((e) => isSameDay(e.startAt, day))
           const showMonth = day.getDate() === 1 || idx === 0
+          const w = weather[format(day, 'yyyy-MM-dd')]
 
           return (
             <div key={day.toISOString()} className="flex flex-col group/day">
+
               {/* Day header */}
-              <div className="text-center mb-2 relative">
+              <div className="text-center mb-1">
                 <span className="text-xs font-semibold text-gray-400 uppercase block leading-none mb-1">
                   {format(day, 'EEE', { locale: da })}
                 </span>
@@ -213,20 +267,38 @@ export default function WeeklyCalendar({
                 <span className={`text-[11px] font-medium block leading-none mt-0.5 ${isToday ? 'text-indigo-500' : 'text-gray-400'}`}>
                   {showMonth ? format(day, 'MMM', { locale: da }) : ' '}
                 </span>
-                <a
-                  href={`/tilfoej?date=${format(day, 'yyyy-MM-dd')}`}
-                  className="absolute top-0 right-0 opacity-0 group-hover/day:opacity-100 transition-opacity p-0.5 rounded-full bg-indigo-100 hover:bg-indigo-200"
-                  aria-label="Tilføj begivenhed"
-                >
-                  <Plus size={11} className="text-indigo-600" />
-                </a>
               </div>
 
-              {/* Events */}
-              <div className="flex flex-col gap-1 min-h-[60px]">
+              {/* Weather strip */}
+              <div
+                className="flex flex-col items-center mb-2 min-h-[26px]"
+                title={w ? `${w.tempMax}° · ${w.rain.toFixed(1)} mm · ${w.wind} km/h` : ''}
+              >
+                {w && (
+                  <>
+                    <span className="text-[11px] font-semibold text-gray-500 leading-none">{w.tempMax}°</span>
+                    <div className="flex items-center gap-0.5 mt-0.5">
+                      {w.rain > 0.5 && <Droplets size={9} className="text-blue-400" />}
+                      {w.wind > 20 && <Wind size={9} className="text-gray-400" />}
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Events + hover add button */}
+              <div className="flex flex-col gap-1 flex-1 min-h-[40px]">
                 {dayEvents.map((event) => (
                   <EventPill key={event.id} event={event} onClick={setSelectedEvent} />
                 ))}
+                <a
+                  href={`/tilfoej?date=${format(day, 'yyyy-MM-dd')}`}
+                  className="mt-auto flex items-center justify-center py-1 opacity-0 group-hover/day:opacity-100 transition-opacity"
+                  aria-label="Tilføj begivenhed"
+                >
+                  <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-indigo-100 hover:bg-indigo-200 transition-colors">
+                    <Plus size={11} className="text-indigo-600" />
+                  </span>
+                </a>
               </div>
             </div>
           )
@@ -234,34 +306,55 @@ export default function WeeklyCalendar({
       </div>
 
       {/* Empty state */}
-      {!loading && totalEvents === 0 && familyId && (
+      {!loading && displayedEvents.length === 0 && familyId && (
         <div className="mt-8 text-center">
-          <p className="text-sm text-gray-400 mb-3">Ingen begivenheder denne uge</p>
-          <a
-            href="/tilfoej"
-            className="inline-flex items-center gap-1.5 text-sm text-indigo-600 hover:text-indigo-800 font-medium"
-          >
-            <Plus size={15} />
-            Tilføj begivenhed
-          </a>
+          <p className="text-sm text-gray-400 mb-3">
+            {filteredPersonId ? 'Ingen begivenheder for denne person' : 'Ingen begivenheder denne uge'}
+          </p>
+          {!filteredPersonId && (
+            <a
+              href="/tilfoej"
+              className="inline-flex items-center gap-1.5 text-sm text-indigo-600 hover:text-indigo-800 font-medium"
+            >
+              <Plus size={15} />
+              Tilføj begivenhed
+            </a>
+          )}
         </div>
       )}
 
-      {/* Member legend */}
-      {(members.length > 0 || managedMembers.length > 0) && (
-        <div className="mt-6 flex flex-wrap gap-3 px-1">
-          {members.map((m) => (
-            <div key={m.id} className="flex items-center gap-1.5 text-xs text-gray-600">
-              <Avatar name={m.name} color={m.color} avatarUrl={m.avatarUrl} size={18} />
-              {m.name}
-            </div>
-          ))}
-          {managedMembers.map((m) => (
-            <div key={m.id} className="flex items-center gap-1.5 text-xs text-gray-500">
-              <Avatar name={m.name} color={m.color} avatarUrl={m.avatarUrl} size={18} />
-              {m.name}
-            </div>
-          ))}
+      {/* Member legend — click to filter by person */}
+      {allPeople.length > 0 && (
+        <div className="mt-6 flex flex-wrap gap-2 px-1 items-center">
+          {filteredPersonId && (
+            <button
+              onClick={() => setFilteredPersonId(null)}
+              className="text-xs text-indigo-600 font-semibold hover:underline"
+            >
+              Alle
+            </button>
+          )}
+          {allPeople.map((m) => {
+            const isSelected = filteredPersonId === m.id
+            const isDimmed = !!filteredPersonId && !isSelected
+            return (
+              <button
+                key={m.id}
+                onClick={() => setFilteredPersonId(isSelected ? null : m.id)}
+                className={`flex items-center gap-1.5 text-xs px-2 py-1 rounded-full border transition-all ${
+                  isSelected
+                    ? 'border-current font-semibold'
+                    : isDimmed
+                    ? 'border-transparent opacity-30'
+                    : 'border-transparent hover:bg-gray-100'
+                }`}
+                style={{ color: isSelected ? m.color : isDimmed ? '#9ca3af' : '#4b5563' }}
+              >
+                <Avatar name={m.name} color={m.color} avatarUrl={m.avatarUrl} size={18} />
+                {m.name}
+              </button>
+            )
+          })}
         </div>
       )}
 
