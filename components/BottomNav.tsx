@@ -12,7 +12,7 @@ const navItems = [
   { href: '/indstillinger', label: 'Indstillinger', Icon: Settings },
 ]
 
-export default function BottomNav({ role }: { role: string }) {
+export default function BottomNav() {
   const pathname = usePathname()
 
   return (

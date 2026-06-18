@@ -49,6 +49,7 @@ export type Database = {
           last_error: string | null
           last_event_count: number | null
           last_synced_at: string | null
+          managed_member_id: string | null
           user_id: string
         }
         Insert: {
@@ -60,6 +61,7 @@ export type Database = {
           last_error?: string | null
           last_event_count?: number | null
           last_synced_at?: string | null
+          managed_member_id?: string | null
           user_id: string
         }
         Update: {
@@ -71,6 +73,7 @@ export type Database = {
           last_error?: string | null
           last_event_count?: number | null
           last_synced_at?: string | null
+          managed_member_id?: string | null
           user_id?: string
         }
         Relationships: [
@@ -79,6 +82,13 @@ export type Database = {
             columns: ["family_id"]
             isOneToOne: false
             referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aula_feeds_managed_member_id_fkey"
+            columns: ["managed_member_id"]
+            isOneToOne: false
+            referencedRelation: "managed_members"
             referencedColumns: ["id"]
           },
           {
@@ -100,6 +110,7 @@ export type Database = {
           family_id: string
           id: string
           location: string | null
+          managed_member_id: string | null
           recurring: Json | null
           source: string
           start_at: string
@@ -117,6 +128,7 @@ export type Database = {
           family_id: string
           id?: string
           location?: string | null
+          managed_member_id?: string | null
           recurring?: Json | null
           source?: string
           start_at: string
@@ -134,6 +146,7 @@ export type Database = {
           family_id?: string
           id?: string
           location?: string | null
+          managed_member_id?: string | null
           recurring?: Json | null
           source?: string
           start_at?: string
@@ -151,10 +164,55 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "events_managed_member_id_fkey"
+            columns: ["managed_member_id"]
+            isOneToOne: false
+            referencedRelation: "managed_members"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "events_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      managed_members: {
+        Row: {
+          avatar_url: string | null
+          color: string
+          created_at: string
+          created_by: string | null
+          family_id: string
+          id: string
+          name: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          color?: string
+          created_at?: string
+          created_by?: string | null
+          family_id: string
+          id?: string
+          name: string
+        }
+        Update: {
+          avatar_url?: string | null
+          color?: string
+          created_at?: string
+          created_by?: string | null
+          family_id?: string
+          id?: string
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "managed_members_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
             referencedColumns: ["id"]
           },
         ]
@@ -265,6 +323,7 @@ export type Database = {
       }
       users: {
         Row: {
+          avatar_url: string | null
           color: string
           created_at: string
           email: string
@@ -274,6 +333,7 @@ export type Database = {
           role: string
         }
         Insert: {
+          avatar_url?: string | null
           color?: string
           created_at?: string
           email: string
@@ -283,6 +343,7 @@ export type Database = {
           role?: string
         }
         Update: {
+          avatar_url?: string | null
           color?: string
           created_at?: string
           email?: string

@@ -15,16 +15,10 @@ export default async function AppShell({
 
   if (!user) redirect('/login')
 
-  const { data: profile } = await supabase
-    .from('users')
-    .select('role')
-    .eq('id', user.id)
-    .single()
-
   return (
-    <div className="min-h-screen bg-gray-50 pb-16">
+    <div className="min-h-screen bg-gray-50" style={{ paddingBottom: 'calc(4rem + env(safe-area-inset-bottom))' }}>
       <main className="max-w-2xl mx-auto px-4">{children}</main>
-      <BottomNav role={profile?.role ?? 'member'} />
+      <BottomNav />
       <InstallBanner />
     </div>
   )

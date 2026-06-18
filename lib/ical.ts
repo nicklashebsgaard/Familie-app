@@ -36,7 +36,7 @@ export function parseIcsToEvents(
 
       // Convert to JS dates
       const startJs = startDate.toJSDate()
-      let endJs = endDate ? endDate.toJSDate() : new Date(startJs.getTime() + 3600000)
+      const endJs = endDate ? endDate.toJSDate() : new Date(startJs.getTime() + 3600000)
 
       // For all-day events DTEND is exclusive in iCal — keep as-is for storage
       events.push({

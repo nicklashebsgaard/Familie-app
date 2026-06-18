@@ -56,8 +56,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
-  // Non-admins can only create events for themselves
-  if (profile?.role !== 'admin' && body.user_id !== user.id) {
+  // Non-admins can only create events for themselves (or their managed members)
+  const isForManagedMember = !!body.managed_member_id
+  if (profile?.role !== 'admin' && !isForManagedMember && body.user_id !== user.id) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
@@ -66,6 +67,7 @@ export async function POST(request: NextRequest) {
     .insert({
       family_id: body.family_id,
       user_id: body.user_id,
+      managed_member_id: body.managed_member_id ?? null,
       title: body.title,
       description: body.description ?? null,
       location: body.location ?? null,

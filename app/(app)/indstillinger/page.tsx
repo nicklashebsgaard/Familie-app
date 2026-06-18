@@ -5,9 +5,13 @@ import {
   updateMemberRole,
   generateInviteLink,
   addAulaFeed,
+  createManagedMember,
+  updateManagedMember,
+  deleteManagedMember,
+  uploadAvatar,
 } from './actions'
 import { signOut } from '@/app/login/actions'
-import { DEFAULT_COLORS } from '@/lib/types'
+import AvatarUpload from '@/components/AvatarUpload'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? ''
 
@@ -32,7 +36,7 @@ export default async function IndstillingerPage() {
 
   const isAdmin = profile?.role === 'admin'
 
-  const [familyResult, membersResult, feedsResult, tokensResult] =
+  const [familyResult, membersResult, managedResult, feedsResult, tokensResult] =
     await Promise.all([
       profile?.family_id
         ? supabase
@@ -44,8 +48,15 @@ export default async function IndstillingerPage() {
       profile?.family_id
         ? supabase
             .from('users')
-            .select('id, name, color, role')
+            .select('id, name, color, role, avatar_url')
             .eq('family_id', profile.family_id)
+        : { data: [] },
+      profile?.family_id
+        ? supabase
+            .from('managed_members')
+            .select('id, name, color, avatar_url')
+            .eq('family_id', profile.family_id)
+            .order('created_at')
         : { data: [] },
       profile?.family_id
         ? supabase
@@ -67,6 +78,7 @@ export default async function IndstillingerPage() {
 
   const family = familyResult?.data
   const members = membersResult.data ?? []
+  const managedMembers = managedResult.data ?? []
   const feeds = feedsResult.data ?? []
   const activeTokens = tokensResult.data ?? []
 
@@ -106,9 +118,13 @@ export default async function IndstillingerPage() {
         <div className="space-y-3">
           {members.map((m) => (
             <div key={m.id} className="flex items-center gap-3">
-              <div
-                className="w-8 h-8 rounded-full flex-shrink-0 border-2 border-white shadow"
-                style={{ backgroundColor: m.color }}
+              <AvatarUpload
+                targetId={m.id}
+                targetType="user"
+                name={m.name}
+                color={m.color}
+                avatarUrl={m.avatar_url}
+                uploadAction={uploadAvatar}
               />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-gray-900 truncate">{m.name}</p>
@@ -156,6 +172,85 @@ export default async function IndstillingerPage() {
           ))}
         </div>
       </section>
+
+      {/* Managed members (children without accounts) */}
+      {isAdmin && (
+        <section className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
+            Børn (uden login)
+          </h2>
+
+          {managedMembers.length > 0 && (
+            <div className="space-y-2 mb-4">
+              {managedMembers.map((m) => (
+                <div key={m.id} className="flex items-center gap-3">
+                  <AvatarUpload
+                    targetId={m.id}
+                    targetType="managed"
+                    name={m.name}
+                    color={m.color}
+                    avatarUrl={m.avatar_url}
+                    uploadAction={uploadAvatar}
+                  />
+                  <span className="flex-1 text-sm font-medium text-gray-900">{m.name}</span>
+
+                  {/* Inline edit — color */}
+                  <form action={updateManagedMember} className="flex gap-1 items-center">
+                    <input type="hidden" name="id" value={m.id} />
+                    <input type="hidden" name="name" value={m.name} />
+                    <input
+                      type="color"
+                      name="color"
+                      defaultValue={m.color}
+                      className="w-8 h-8 rounded cursor-pointer border border-gray-200"
+                      title="Skift farve"
+                    />
+                    <button type="submit" className="text-xs text-indigo-600 hover:underline px-1">
+                      OK
+                    </button>
+                  </form>
+
+                  {/* Delete */}
+                  <form action={deleteManagedMember}>
+                    <input type="hidden" name="id" value={m.id} />
+                    <button
+                      type="submit"
+                      className="text-xs text-red-500 hover:underline"
+                      title="Slet"
+                    >
+                      Slet
+                    </button>
+                  </form>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Add child form */}
+          <form action={createManagedMember} className="flex gap-2 items-center">
+            <input
+              name="name"
+              type="text"
+              placeholder="Barnets navn"
+              required
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+            <input
+              type="color"
+              name="color"
+              defaultValue="#22c55e"
+              className="w-10 h-10 rounded cursor-pointer border border-gray-200 flex-shrink-0"
+              title="Farve"
+            />
+            <button
+              type="submit"
+              className="px-3 py-2 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700 whitespace-nowrap"
+            >
+              + Tilføj
+            </button>
+          </form>
+        </section>
+      )}
 
       {/* Invitation links */}
       {isAdmin && (
@@ -222,6 +317,13 @@ export default async function IndstillingerPage() {
               required
             >
               <option value="">Vælg barn...</option>
+              {managedMembers.length > 0 && (
+                managedMembers.map((m) => (
+                  <option key={`managed:${m.id}`} value={`managed:${m.id}`}>
+                    {m.name} (barn)
+                  </option>
+                ))
+              )}
               {members.map((m) => (
                 <option key={m.id} value={m.id}>
                   {m.name}

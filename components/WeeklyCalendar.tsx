@@ -1,24 +1,42 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { addWeeks, subWeeks, format, isSameDay, parseISO } from 'date-fns'
+import { addWeeks, subWeeks, format, isSameDay, parseISO, getISOWeek, startOfWeek, endOfWeek } from 'date-fns'
 import { da } from 'date-fns/locale'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
-import type { CalendarEvent, FamilyMember } from '@/lib/types'
+import { ChevronLeft, ChevronRight, Plus } from 'lucide-react'
+import type { CalendarEvent, FamilyMember, ManagedMember } from '@/lib/types'
 import EventPill from './EventPill'
+import EventSheet from './EventSheet'
+import Avatar from './Avatar'
 
 interface Props {
   initialEvents: CalendarEvent[]
   members: FamilyMember[]
+  managedMembers: ManagedMember[]
   weekDays: Date[]
   familyId: string | null
   currentUserId: string
 }
 
+function buildWeekDays(offset: number): Date[] {
+  const base = new Date()
+  base.setHours(0, 0, 0, 0)
+  const monday = new Date(base)
+  monday.setDate(base.getDate() - ((base.getDay() + 6) % 7))
+  const start =
+    offset === 0 ? monday : offset > 0 ? addWeeks(monday, offset) : subWeeks(monday, -offset)
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(start)
+    d.setDate(start.getDate() + i)
+    return d
+  })
+}
+
 export default function WeeklyCalendar({
   initialEvents,
   members,
+  managedMembers,
   weekDays: initialWeekDays,
   familyId,
   currentUserId,
@@ -26,22 +44,61 @@ export default function WeeklyCalendar({
   const [events, setEvents] = useState<CalendarEvent[]>(initialEvents)
   const [weekOffset, setWeekOffset] = useState(0)
   const [weekDays, setWeekDays] = useState(initialWeekDays)
+  const [loading, setLoading] = useState(false)
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null)
 
-  // Adjust week days when offset changes
+  const isAdmin = members.find((m) => m.id === currentUserId)?.role === 'admin'
+
+  const membersById = new Map(members.map((m) => [m.id, m]))
+  const managedById = new Map(managedMembers.map((m) => [m.id, m]))
+
+  function rowToEvent(row: Record<string, unknown>): CalendarEvent {
+    return {
+      id: row.id as string,
+      familyId: row.family_id as string,
+      userId: row.user_id as string,
+      managedMemberId: row.managed_member_id as string | undefined,
+      title: row.title as string,
+      description: row.description as string | undefined,
+      location: row.location as string | undefined,
+      startAt: parseISO(row.start_at as string),
+      endAt: parseISO(row.end_at as string),
+      allDay: row.all_day as boolean,
+      source: row.source as 'manual' | 'aula',
+      member: membersById.get(row.user_id as string),
+      managedMember: row.managed_member_id
+        ? managedById.get(row.managed_member_id as string)
+        : undefined,
+    }
+  }
+
+  // Re-fetch events whenever week changes
   useEffect(() => {
-    const base = new Date()
-    base.setHours(0, 0, 0, 0)
-    const monday = new Date(base)
-    monday.setDate(base.getDate() - ((base.getDay() + 6) % 7))
-    const start = weekOffset === 0 ? monday : (weekOffset > 0 ? addWeeks(monday, weekOffset) : subWeeks(monday, Math.abs(weekOffset)))
-    setWeekDays(Array.from({ length: 7 }, (_, i) => {
-      const d = new Date(start)
-      d.setDate(start.getDate() + i)
-      return d
-    }))
-  }, [weekOffset])
+    const days = buildWeekDays(weekOffset)
+    setWeekDays(days)
 
-  // Supabase Realtime subscription for live updates
+    if (weekOffset === 0) {
+      // Initial data from server is already correct for week 0
+      setEvents(initialEvents)
+      return
+    }
+
+    if (!familyId) return
+    setLoading(true)
+
+    const from = startOfWeek(days[0], { weekStartsOn: 1 }).toISOString()
+    const to = endOfWeek(days[6], { weekStartsOn: 1 }).toISOString()
+
+    fetch(`/api/events?from=${from}&to=${to}`)
+      .then((r) => r.json())
+      .then((rows: Record<string, unknown>[]) => {
+        setEvents(rows.map(rowToEvent))
+      })
+      .finally(() => setLoading(false))
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [weekOffset, familyId])
+
+  // Realtime subscription — reflects live changes for the visible week
   useEffect(() => {
     if (!familyId) return
 
@@ -50,49 +107,20 @@ export default function WeeklyCalendar({
       .channel('events-realtime')
       .on(
         'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'events',
-          filter: `family_id=eq.${familyId}`,
-        },
+        { event: '*', schema: 'public', table: 'events', filter: `family_id=eq.${familyId}` },
         (payload) => {
           if (payload.eventType === 'INSERT') {
             const row = payload.new as Record<string, unknown>
-            const member = members.find((m) => m.id === row.user_id)
-            setEvents((prev) => [
-              ...prev,
-              {
-                id: row.id as string,
-                familyId: row.family_id as string,
-                userId: row.user_id as string,
-                title: row.title as string,
-                description: row.description as string | undefined,
-                location: row.location as string | undefined,
-                startAt: parseISO(row.start_at as string),
-                endAt: parseISO(row.end_at as string),
-                allDay: row.all_day as boolean,
-                source: row.source as 'manual' | 'aula',
-                member,
-              },
-            ])
+            const newEvent = rowToEvent(row)
+            // Only add if it falls in the currently displayed week
+            if (weekDays.some((d) => isSameDay(newEvent.startAt, d))) {
+              setEvents((prev) => [...prev, newEvent])
+            }
           }
           if (payload.eventType === 'UPDATE') {
             const row = payload.new as Record<string, unknown>
-            const member = members.find((m) => m.id === row.user_id)
             setEvents((prev) =>
-              prev.map((e) =>
-                e.id === row.id
-                  ? {
-                      ...e,
-                      title: row.title as string,
-                      startAt: parseISO(row.start_at as string),
-                      endAt: parseISO(row.end_at as string),
-                      allDay: row.all_day as boolean,
-                      member,
-                    }
-                  : e
-              )
+              prev.map((e) => (e.id === row.id ? rowToEvent(row) : e))
             )
           }
           if (payload.eventType === 'DELETE') {
@@ -104,18 +132,26 @@ export default function WeeklyCalendar({
       )
       .subscribe()
 
-    return () => {
-      supabase.removeChannel(channel)
-    }
-  }, [familyId, members])
+    return () => { supabase.removeChannel(channel) }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [familyId, members, managedMembers, weekDays])
+
+  const weekNumber = getISOWeek(weekDays[0])
 
   const weekLabel = (() => {
+    const start = weekDays[0]
+    const end = weekDays[6]
+    // If week spans two months, show both
+    if (start.getMonth() !== end.getMonth()) {
+      return `${format(start, 'd. MMM', { locale: da })} – ${format(end, 'd. MMM', { locale: da })}`
+    }
     if (weekOffset === 0) return 'Denne uge'
     if (weekOffset === 1) return 'Næste uge'
     if (weekOffset === -1) return 'Forrige uge'
-    const start = weekDays[0]
-    return `${format(start, 'd. MMM', { locale: da })}`
+    return format(start, 'MMMM yyyy', { locale: da })
   })()
+
+  const totalEvents = events.length
 
   return (
     <div className="pt-4">
@@ -128,7 +164,12 @@ export default function WeeklyCalendar({
         >
           <ChevronLeft size={20} className="text-gray-600" />
         </button>
-        <h1 className="text-lg font-semibold text-gray-900">{weekLabel}</h1>
+        <div className="text-center">
+          <span className="text-xs font-semibold text-indigo-600 uppercase tracking-widest block">
+            Uge {weekNumber}
+          </span>
+          <h1 className="text-lg font-bold text-gray-900 leading-tight">{weekLabel}</h1>
+        </div>
         <button
           onClick={() => setWeekOffset((o) => o + 1)}
           className="p-2 rounded-full hover:bg-gray-200 transition-colors"
@@ -139,33 +180,36 @@ export default function WeeklyCalendar({
       </div>
 
       {/* Day columns */}
-      <div className="grid grid-cols-7 gap-1">
-        {weekDays.map((day) => {
+      <div className={`grid grid-cols-7 gap-1 transition-opacity duration-150 ${loading ? 'opacity-40' : 'opacity-100'}`}>
+        {weekDays.map((day, idx) => {
           const isToday = isSameDay(day, new Date())
           const dayEvents = events.filter((e) => isSameDay(e.startAt, day))
+          // Show month label on the 1st of a month, or on Monday if week starts in a new month vs prev week
+          const showMonth = day.getDate() === 1 || idx === 0
 
           return (
             <div key={day.toISOString()} className="flex flex-col">
               {/* Day header */}
-              <div className="text-center mb-1">
-                <span className="text-xs text-gray-500 uppercase block">
+              <div className="text-center mb-2">
+                <span className="text-xs font-semibold text-gray-400 uppercase block leading-none mb-1">
                   {format(day, 'EEE', { locale: da })}
                 </span>
                 <span
-                  className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-sm font-medium ${
-                    isToday
-                      ? 'bg-indigo-600 text-white'
-                      : 'text-gray-900'
+                  className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-base font-bold ${
+                    isToday ? 'bg-indigo-600 text-white' : 'text-gray-900'
                   }`}
                 >
                   {format(day, 'd')}
+                </span>
+                <span className={`text-[11px] font-medium block leading-none mt-0.5 ${isToday ? 'text-indigo-500' : 'text-gray-400'}`}>
+                  {showMonth ? format(day, 'MMM', { locale: da }) : ' '}
                 </span>
               </div>
 
               {/* Events */}
               <div className="flex flex-col gap-1 min-h-[60px]">
                 {dayEvents.map((event) => (
-                  <EventPill key={event.id} event={event} />
+                  <EventPill key={event.id} event={event} onClick={setSelectedEvent} />
                 ))}
               </div>
             </div>
@@ -173,19 +217,50 @@ export default function WeeklyCalendar({
         })}
       </div>
 
+      {/* Empty state */}
+      {!loading && totalEvents === 0 && familyId && (
+        <div className="mt-8 text-center">
+          <p className="text-sm text-gray-400 mb-3">Ingen begivenheder denne uge</p>
+          <a
+            href="/tilfoej"
+            className="inline-flex items-center gap-1.5 text-sm text-indigo-600 hover:text-indigo-800 font-medium"
+          >
+            <Plus size={15} />
+            Tilføj begivenhed
+          </a>
+        </div>
+      )}
+
       {/* Member legend */}
-      {members.length > 0 && (
-        <div className="mt-6 flex flex-wrap gap-2 px-1">
+      {(members.length > 0 || managedMembers.length > 0) && (
+        <div className="mt-6 flex flex-wrap gap-3 px-1">
           {members.map((m) => (
             <div key={m.id} className="flex items-center gap-1.5 text-xs text-gray-600">
-              <span
-                className="w-3 h-3 rounded-full flex-shrink-0"
-                style={{ backgroundColor: m.color }}
-              />
+              <Avatar name={m.name} color={m.color} avatarUrl={m.avatarUrl} size={18} />
+              {m.name}
+            </div>
+          ))}
+          {managedMembers.map((m) => (
+            <div key={m.id} className="flex items-center gap-1.5 text-xs text-gray-500">
+              <Avatar name={m.name} color={m.color} avatarUrl={m.avatarUrl} size={18} />
               {m.name}
             </div>
           ))}
         </div>
+      )}
+
+      {/* Event detail sheet */}
+      {selectedEvent && (
+        <EventSheet
+          event={selectedEvent}
+          currentUserId={currentUserId}
+          isAdmin={isAdmin}
+          onClose={() => setSelectedEvent(null)}
+          onDeleted={(id) => {
+            setEvents((prev) => prev.filter((e) => e.id !== id))
+            setSelectedEvent(null)
+          }}
+        />
       )}
     </div>
   )

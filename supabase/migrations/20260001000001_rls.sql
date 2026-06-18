@@ -5,13 +5,15 @@ alter table public.events     enable row level security;
 alter table public.aula_feeds enable row level security;
 
 -- ─── HELPERS ────────────────────────────────────────────────────────────────
+-- SECURITY DEFINER bypasses RLS so these functions don't cause infinite recursion
+-- when called from within the users table RLS policies
 create or replace function public.current_family_id()
-returns uuid language sql stable as $$
+returns uuid language sql stable security definer as $$
   select family_id from public.users where id = auth.uid()
 $$;
 
 create or replace function public.current_role()
-returns text language sql stable as $$
+returns text language sql stable security definer as $$
   select role from public.users where id = auth.uid()
 $$;
 

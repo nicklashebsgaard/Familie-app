@@ -7,12 +7,23 @@ export interface FamilyMember {
   color: string
   role: Role
   email: string
+  avatarUrl?: string | null
+}
+
+// Children or people without an auth account — managed by admins
+export interface ManagedMember {
+  id: string
+  name: string
+  color: string
+  familyId: string
+  avatarUrl?: string | null
 }
 
 export interface CalendarEvent {
   id: string
   familyId: string
   userId: string
+  managedMemberId?: string
   title: string
   description?: string
   location?: string
@@ -23,7 +34,9 @@ export interface CalendarEvent {
   source: EventSource
   aulaUid?: string
   transport?: string
+  // The person this event belongs to visually (managed member takes precedence)
   member?: FamilyMember
+  managedMember?: ManagedMember
 }
 
 export interface RecurringRule {
