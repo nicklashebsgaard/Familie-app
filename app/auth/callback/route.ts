@@ -25,6 +25,7 @@ export async function GET(request: NextRequest) {
       await ensureProfile(supabase)
       return redirectTo
     }
+    console.error('[auth/callback] exchangeCodeForSession error:', error?.message)
   }
 
   // Token hash flow (magic link on different browser/device)
@@ -34,8 +35,10 @@ export async function GET(request: NextRequest) {
       await ensureProfile(supabase)
       return redirectTo
     }
+    console.error('[auth/callback] verifyOtp error:', error?.message)
   }
 
+  console.error('[auth/callback] both flows failed — code:', !!code, 'token_hash:', !!token_hash, 'type:', type)
   return NextResponse.redirect(`${origin}/login?error=auth_failed`)
 }
 
