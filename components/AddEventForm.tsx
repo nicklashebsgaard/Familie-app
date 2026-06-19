@@ -174,7 +174,7 @@ export default function AddEventForm({
 
       {/* Titel */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 px-4 py-4">
-        <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest block mb-2">
+        <label className="text-xs font-bold text-gray-400 uppercase tracking-widest block mb-2">
           Titel <span className="text-red-400">*</span>
         </label>
         <input
@@ -190,7 +190,7 @@ export default function AddEventForm({
       {/* For hvem */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 px-4 py-4">
         <div className="flex items-center justify-between mb-3">
-          <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">
+          <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">
             For hvem <span className="text-red-400">*</span>
           </label>
           <button
@@ -227,7 +227,7 @@ export default function AddEventForm({
 
         {/* Dato */}
         <div className="px-4 py-4">
-          <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest block mb-2">
+          <label className="text-xs font-bold text-gray-400 uppercase tracking-widest block mb-2">
             Dato <span className="text-red-400">*</span>
           </label>
           <input
@@ -254,7 +254,7 @@ export default function AddEventForm({
         {!allDay && (
           <div className="px-4 py-4 grid grid-cols-2 gap-4">
             <div>
-              <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest block mb-2">Start</label>
+              <label className="text-xs font-bold text-gray-400 uppercase tracking-widest block mb-2">Start</label>
               <input
                 name="start_time"
                 type="time"
@@ -263,7 +263,7 @@ export default function AddEventForm({
               />
             </div>
             <div>
-              <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest block mb-2">Slut</label>
+              <label className="text-xs font-bold text-gray-400 uppercase tracking-widest block mb-2">Slut</label>
               <input
                 name="end_time"
                 type="time"
@@ -278,7 +278,7 @@ export default function AddEventForm({
       {/* Gentag */}
       {!isEdit && (
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 px-4 py-4">
-          <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest block mb-3">
+          <label className="text-xs font-bold text-gray-400 uppercase tracking-widest block mb-3">
             Gentager sig
           </label>
           <div className="flex flex-wrap gap-2 mb-3">
@@ -301,7 +301,7 @@ export default function AddEventForm({
           </div>
           {recurringFreq !== 'none' && (
             <div>
-              <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest block mb-2">
+              <label className="text-xs font-bold text-gray-400 uppercase tracking-widest block mb-2">
                 Gentag til (valgfrit)
               </label>
               <input
@@ -319,7 +319,7 @@ export default function AddEventForm({
       {/* Detaljer */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 divide-y divide-gray-100">
         <div className="px-4 py-4">
-          <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest block mb-2">Sted</label>
+          <label className="text-xs font-bold text-gray-400 uppercase tracking-widest block mb-2">Sted</label>
           <input
             name="location"
             type="text"
@@ -329,7 +329,7 @@ export default function AddEventForm({
           />
         </div>
         <div className="px-4 py-4">
-          <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest block mb-2">Kørsel / transport</label>
+          <label className="text-xs font-bold text-gray-400 uppercase tracking-widest block mb-2">Kørsel / transport</label>
           <input
             name="transport"
             type="text"
@@ -339,7 +339,7 @@ export default function AddEventForm({
           />
         </div>
         <div className="px-4 py-4">
-          <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest block mb-2">Bemærkninger</label>
+          <label className="text-xs font-bold text-gray-400 uppercase tracking-widest block mb-2">Bemærkninger</label>
           <textarea
             name="description"
             rows={3}

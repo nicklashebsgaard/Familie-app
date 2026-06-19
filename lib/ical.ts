@@ -11,13 +11,16 @@ export interface ParsedEvent {
   all_day: boolean
   family_id: string
   user_id: string
+  managed_member_id: string | null
+  participants: string[]
   source: 'aula'
 }
 
 export function parseIcsToEvents(
   icsText: string,
   familyId: string,
-  userId: string
+  userId: string,
+  managedMemberId?: string | null,
 ): ParsedEvent[] {
   const jcal = ICAL.parse(icsText)
   const comp = new ICAL.Component(jcal)
@@ -39,6 +42,9 @@ export function parseIcsToEvents(
       const endJs = endDate ? endDate.toJSDate() : new Date(startJs.getTime() + 3600000)
 
       // For all-day events DTEND is exclusive in iCal — keep as-is for storage
+      const participant = managedMemberId
+        ? `managed:${managedMemberId}`
+        : `auth:${userId}`
       events.push({
         aula_uid: ev.uid,
         title: ev.summary || '(ingen titel)',
@@ -49,6 +55,8 @@ export function parseIcsToEvents(
         all_day: startDate.isDate,
         family_id: familyId,
         user_id: userId,
+        managed_member_id: managedMemberId ?? null,
+        participants: [participant],
         source: 'aula',
       })
     } catch {

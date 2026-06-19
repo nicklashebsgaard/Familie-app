@@ -4,11 +4,12 @@ import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { addWeeks, subWeeks, format, isSameDay, parseISO, getISOWeek, startOfWeek, endOfWeek } from 'date-fns'
 import { da } from 'date-fns/locale'
-import { ChevronLeft, ChevronRight, Plus, Share2, Loader2, Bell, BellOff } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Plus, Share2, Loader2, Bell, BellOff, Check } from 'lucide-react'
 import type { CalendarEvent, FamilyMember, ManagedMember } from '@/lib/types'
 import EventPill from './EventPill'
 import EventSheet from './EventSheet'
 import Avatar from './Avatar'
+import MonthView from './MonthView'
 
 interface WeatherData {
   tempMax: number
@@ -78,8 +79,15 @@ export default function WeeklyCalendar({
   const [touchStartX, setTouchStartX] = useState<number | null>(null)
   const [touchStartY, setTouchStartY] = useState<number | null>(null)
   const [sharing, setSharing] = useState(false)
+  const [shareSuccess, setShareSuccess] = useState(false)
   const [notifState, setNotifState] = useState<'unknown' | 'subscribed' | 'denied' | 'unsupported'>('unknown')
+  const [viewMode, setViewMode] = useState<'week' | 'month'>('week')
   const weekGridRef = useRef<HTMLDivElement>(null)
+  const monthGridRef = useRef<HTMLDivElement>(null)
+  const [monthLabel, setMonthLabel] = useState(() => {
+    const d = new Date()
+    return d.toLocaleDateString('da-DK', { month: 'long', year: 'numeric' })
+  })
 
   const isAdmin = members.find((m) => m.id === currentUserId)?.role === 'admin'
   const membersById = new Map(members.map((m) => [m.id, m]))
@@ -279,27 +287,80 @@ export default function WeeklyCalendar({
   }
 
   async function handleShare() {
-    if (!weekGridRef.current) return
+    const captureEl = viewMode === 'month' ? monthGridRef.current : weekGridRef.current
+    if (!captureEl) return
     setSharing(true)
     try {
       const html2canvas = (await import('html2canvas')).default
-      const canvas = await html2canvas(weekGridRef.current, {
+
+      // Step 1: capture the calendar grid as-is
+      const contentCanvas = await html2canvas(captureEl, {
         scale: 2,
         backgroundColor: '#f9fafb',
         useCORS: true,
+        allowTaint: true,
         logging: false,
       })
-      const blob = await new Promise<Blob>((resolve) => canvas.toBlob((b) => resolve(b!), 'image/png'))
-      const file = new File([blob], `uge-${weekNumber}.png`, { type: 'image/png' })
+
+      // Step 2: compose title + content onto a new canvas
+      const S = 2 // scale
+      const pad = 20 * S
+      const titleH = 60 * S
+
+      const label = viewMode === 'month'
+        ? (monthLabel || captureEl.querySelector('h2')?.textContent?.trim() || '')
+        : `Uge ${weekNumber} · ${weekLabel}`
+
+      const W = contentCanvas.width + pad * 2
+      const H = contentCanvas.height + titleH + pad * 2
+
+      const final = document.createElement('canvas')
+      final.width = W
+      final.height = H
+      const ctx = final.getContext('2d')!
+
+      // Background
+      ctx.fillStyle = '#f9fafb'
+      ctx.fillRect(0, 0, W, H)
+
+      // "FAMILIEKALENDER" label
+      ctx.fillStyle = '#6366f1'
+      ctx.font = `700 ${11 * S}px -apple-system,system-ui,sans-serif`
+      ctx.textAlign = 'center'
+      ctx.fillText('FAMILIEKALENDER', W / 2, pad + 14 * S)
+
+      // Main title
+      ctx.fillStyle = '#111827'
+      ctx.font = `800 ${17 * S}px -apple-system,system-ui,sans-serif`
+      ctx.fillText(label, W / 2, pad + 14 * S + 20 * S + 2 * S)
+
+      // Divider line
+      ctx.strokeStyle = '#e5e7eb'
+      ctx.lineWidth = S
+      ctx.beginPath()
+      ctx.moveTo(pad, titleH + pad - 8 * S)
+      ctx.lineTo(W - pad, titleH + pad - 8 * S)
+      ctx.stroke()
+
+      // Calendar content
+      ctx.drawImage(contentCanvas, pad, titleH + pad - 8 * S)
+
+      // Step 3: share or download
+      const filename = viewMode === 'month'
+        ? `familie-${(label).toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}.png`
+        : `familie-uge-${weekNumber}.png`
+
+      const blob = await new Promise<Blob>((resolve) => final.toBlob((b) => resolve(b!), 'image/png'))
+      const file = new File([blob], filename, { type: 'image/png' })
       if (navigator.share && navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ files: [file], title: `Familiekalender — Uge ${weekNumber}` })
+        await navigator.share({ files: [file], title: `Familiekalender — ${label}` })
       } else {
         const url = URL.createObjectURL(blob)
         const a = document.createElement('a')
-        a.href = url
-        a.download = `uge-${weekNumber}.png`
-        a.click()
+        a.href = url; a.download = filename; a.click()
         URL.revokeObjectURL(url)
+        setShareSuccess(true)
+        setTimeout(() => setShareSuccess(false), 2500)
       }
     } catch {
       // Share cancelled or failed — no-op
@@ -335,32 +396,58 @@ export default function WeeklyCalendar({
 
   return (
     <div className="pt-4">
-      {/* Week navigation */}
+      {/* Header — week nav only shown in week mode, toggle always visible */}
       <div className="flex items-center justify-between mb-4 px-1">
-        <button
-          onClick={() => setWeekOffset((o) => o - 1)}
-          className="p-2 rounded-full hover:bg-gray-200 transition-colors"
-          aria-label="Forrige uge"
-        >
-          <ChevronLeft size={20} className="text-gray-600" />
-        </button>
+        {viewMode === 'week' ? (
+          <button
+            onClick={() => setWeekOffset((o) => o - 1)}
+            className="p-2 rounded-full hover:bg-gray-200 transition-colors"
+            aria-label="Forrige uge"
+          >
+            <ChevronLeft size={20} className="text-gray-600" />
+          </button>
+        ) : (
+          <div className="w-10" />
+        )}
 
-        <div className="text-center flex-1">
-          <span className="text-xs sm:text-sm font-semibold text-indigo-600 uppercase tracking-widest block">
-            Uge {weekNumber}
-          </span>
-          <h1 className="text-lg sm:text-2xl font-bold text-gray-900 leading-tight">{weekLabel}</h1>
-          {weekOffset !== 0 && (
-            <button
-              onClick={() => setWeekOffset(0)}
-              className="mt-0.5 text-xs text-indigo-600 font-semibold bg-indigo-50 px-2.5 py-0.5 rounded-full hover:bg-indigo-100 transition-colors inline-block"
-            >
-              I dag ↑
-            </button>
-          )}
-        </div>
+        {viewMode === 'week' && (
+          <div className="text-center flex-1">
+            <span className="text-xs sm:text-sm font-semibold text-indigo-600 uppercase tracking-widest block">
+              Uge {weekNumber}
+            </span>
+            <h1 className="text-lg sm:text-2xl font-bold text-gray-900 leading-tight">{weekLabel}</h1>
+            {weekOffset !== 0 && (
+              <button
+                onClick={() => setWeekOffset(0)}
+                className="mt-0.5 text-xs text-indigo-600 font-semibold bg-indigo-50 px-2.5 py-0.5 rounded-full hover:bg-indigo-100 transition-colors inline-block"
+              >
+                I dag ↑
+              </button>
+            )}
+          </div>
+        )}
+        {viewMode === 'month' && <div className="flex-1" />}
 
         <div className="flex items-center gap-0.5">
+          {/* View toggle */}
+          <div className="flex bg-gray-100 rounded-full p-0.5 mr-1">
+            <button
+              onClick={() => setViewMode('week')}
+              className={`px-2.5 py-1 rounded-full text-xs font-semibold transition-all ${
+                viewMode === 'week' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-500'
+              }`}
+            >
+              Uge
+            </button>
+            <button
+              onClick={() => setViewMode('month')}
+              className={`px-2.5 py-1 rounded-full text-xs font-semibold transition-all ${
+                viewMode === 'month' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-500'
+              }`}
+            >
+              Måned
+            </button>
+          </div>
           {notifState !== 'unsupported' && (
             <button
               onClick={handleNotification}
@@ -382,21 +469,40 @@ export default function WeeklyCalendar({
           >
             {sharing
               ? <Loader2 size={18} className="text-gray-500 animate-spin" />
+              : shareSuccess
+              ? <Check size={18} className="text-green-500" />
               : <Share2 size={18} className="text-gray-500" />
             }
           </button>
-          <button
-            onClick={() => setWeekOffset((o) => o + 1)}
-            className="p-2 rounded-full hover:bg-gray-200 transition-colors"
-            aria-label="Næste uge"
-          >
-            <ChevronRight size={20} className="text-gray-600" />
-          </button>
+          {viewMode === 'week' && (
+            <button
+              onClick={() => setWeekOffset((o) => o + 1)}
+              className="p-2 rounded-full hover:bg-gray-200 transition-colors"
+              aria-label="Næste uge"
+            >
+              <ChevronRight size={20} className="text-gray-600" />
+            </button>
+          )}
         </div>
       </div>
 
+      {/* Month view */}
+      {viewMode === 'month' && (
+        <MonthView
+          ref={monthGridRef}
+          initialEvents={initialEvents}
+          members={members}
+          managedMembers={managedMembers}
+          familyId={familyId}
+          filteredPersonId={filteredPersonId}
+          selectedEvent={selectedEvent}
+          onSelectEvent={setSelectedEvent}
+          onMonthChange={setMonthLabel}
+        />
+      )}
+
       {/* Day columns */}
-      <div
+      {viewMode === 'week' && <div
         ref={weekGridRef}
         className={`grid grid-cols-7 gap-1 sm:gap-2 transition-opacity duration-150 ${loading ? 'opacity-40' : 'opacity-100'}`}
         onTouchStart={handleTouchStart}
@@ -452,7 +558,7 @@ export default function WeeklyCalendar({
                 ))}
                 <a
                   href={`/tilfoej?date=${format(day, 'yyyy-MM-dd')}`}
-                  className="flex items-center justify-center py-0.5 opacity-0 group-hover/day:opacity-100 transition-opacity"
+                  className="hidden sm:flex items-center justify-center py-0.5 opacity-0 group-hover/day:opacity-100 transition-opacity"
                   aria-label="Tilføj begivenhed"
                 >
                   <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-indigo-100 hover:bg-indigo-200 transition-colors">
@@ -463,10 +569,10 @@ export default function WeeklyCalendar({
             </div>
           )
         })}
-      </div>
+      </div>}
 
       {/* Empty state */}
-      {!loading && displayedEvents.length === 0 && familyId && (
+      {viewMode === 'week' && !loading && displayedEvents.length === 0 && familyId && (
         <div className="mt-8 text-center">
           <p className="text-sm text-gray-400 mb-3">
             {filteredPersonId ? 'Ingen begivenheder for denne person' : 'Ingen begivenheder denne uge'}

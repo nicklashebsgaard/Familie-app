@@ -44,11 +44,13 @@ export async function POST() {
       if (!response.ok) throw new Error(`HTTP ${response.status}`)
 
       const icsText = await response.text()
-      const parsed = parseIcsToEvents(icsText, feed.family_id, feed.user_id)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const managedMemberId = (feed as any).managed_member_id ?? null
+      const parsed = parseIcsToEvents(icsText, feed.family_id, feed.user_id, managedMemberId)
 
       if (parsed.length > 0) {
-        await serviceClient
-          .from('events')
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (serviceClient.from('events') as any)
           .upsert(parsed, { onConflict: 'family_id,aula_uid', ignoreDuplicates: false })
       }
 

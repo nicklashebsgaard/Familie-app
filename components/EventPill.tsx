@@ -32,7 +32,7 @@ export default function EventPill({ event, onClick, tooltipSide = 'left' }: Prop
       >
         <div className="px-2 pt-1.5 pb-7 sm:px-2.5 sm:pt-2 sm:pb-7 relative min-h-[44px] sm:min-h-[50px]">
           {time && (
-            <span className="text-white/80 block text-[10px] sm:text-[11px] leading-none mb-0.5 font-semibold tracking-tight">
+            <span className="text-white/80 block text-[11px] sm:text-[12px] leading-none mb-0.5 font-semibold tracking-tight">
               {time}
             </span>
           )}

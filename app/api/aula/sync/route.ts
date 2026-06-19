@@ -40,11 +40,14 @@ export async function GET(request: NextRequest) {
         }
 
         const icsText = await response.text()
-        const parsed = parseIcsToEvents(icsText, feed.family_id, feed.user_id)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const managedMemberId = (feed as any).managed_member_id ?? null
+        const parsed = parseIcsToEvents(icsText, feed.family_id, feed.user_id, managedMemberId)
 
         if (parsed.length > 0) {
           // Upsert events — on conflict (family_id, aula_uid) update title/times
-          const { error: upsertError } = await supabase.from('events').upsert(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const { error: upsertError } = await (supabase.from('events') as any).upsert(
             parsed,
             { onConflict: 'family_id,aula_uid', ignoreDuplicates: false }
           )

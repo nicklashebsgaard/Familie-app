@@ -79,7 +79,8 @@ export default function EventSheet({ event, currentUserId, isAdmin, onClose, onD
           >
             <button
               onClick={close}
-              className="absolute top-4 right-4 p-1.5 rounded-full hover:bg-black/10 transition-colors"
+              className="absolute top-3 right-3 p-2.5 rounded-full hover:bg-black/10 transition-colors"
+              aria-label="Luk"
             >
               <X size={18} className="text-gray-500" />
             </button>
