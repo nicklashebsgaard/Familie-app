@@ -49,8 +49,10 @@ export default function MagicLinkForm({ next }: { next: string }) {
   if (sent) {
     return (
       <div className="space-y-4">
-        <div className="p-3 bg-green-50 border border-green-200 rounded-xl text-green-700 text-sm">
-          Tjek din e-mail — vi har sendt dig et link og en 6-cifret kode.
+        <div className="p-4 bg-green-50 border border-green-200 rounded-xl text-green-800 text-sm space-y-2">
+          <p className="font-semibold">Tjek din e-mail!</p>
+          <p>Vi har sendt et login-link til <span className="font-mono">{email}</span>.</p>
+          <p className="text-green-700">Vigtigt: Åbn linket i <strong>samme browser</strong> som du bruger nu — ikke inde fra Gmail-appen.</p>
         </div>
 
         {error && (
@@ -59,33 +61,9 @@ export default function MagicLinkForm({ next }: { next: string }) {
           </div>
         )}
 
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">
-            Indtast 6-cifret kode fra e-mailen
-          </label>
-          <input
-            type="text"
-            inputMode="numeric"
-            pattern="[0-9]*"
-            maxLength={6}
-            value={code}
-            onChange={e => setCode(e.target.value.replace(/\D/g, ''))}
-            placeholder="123456"
-            className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 text-center text-xl font-mono tracking-widest focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            autoFocus
-          />
-          <button
-            onClick={handleVerifyCode}
-            disabled={code.length < 6 || loading}
-            className="w-full px-4 py-3 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 transition-colors disabled:opacity-50"
-          >
-            {loading ? 'Verificerer…' : 'Log ind'}
-          </button>
-        </div>
-
         <button
           onClick={() => { setSent(false); setCode(''); setError(null) }}
-          className="w-full text-sm text-gray-500 hover:text-gray-700"
+          className="w-full text-sm text-gray-500 hover:text-gray-700 py-2"
         >
           ← Prøv en anden e-mail
         </button>
