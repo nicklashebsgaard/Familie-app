@@ -1,17 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
-import { useRouter } from 'next/navigation'
 import { sendLoginCode } from './actions'
 
 export default function MagicLinkForm({ next }: { next: string }) {
   const [email, setEmail] = useState('')
   const [sent, setSent] = useState(false)
-  const [code, setCode] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const router = useRouter()
 
   async function handleSend() {
     if (!email.trim()) return
@@ -19,31 +15,12 @@ export default function MagicLinkForm({ next }: { next: string }) {
     setError(null)
     const result = await sendLoginCode(email.trim(), next)
     if (result.error) {
-      setError('Kunne ikke sende kode. Prøv igen.')
+      setError('Kunne ikke sende e-mail. Prøv igen.')
       setLoading(false)
       return
     }
     setSent(true)
     setLoading(false)
-  }
-
-  async function handleVerifyCode() {
-    if (code.trim().length < 6) return
-    setLoading(true)
-    setError(null)
-    const supabase = createClient()
-    const { error: err } = await supabase.auth.verifyOtp({
-      email,
-      token: code.trim(),
-      type: 'email',
-    })
-    if (err) {
-      setError('Forkert kode. Prøv igen eller bed om et nyt link.')
-      setLoading(false)
-      return
-    }
-    router.push(next)
-    router.refresh()
   }
 
   if (sent) {
@@ -62,7 +39,7 @@ export default function MagicLinkForm({ next }: { next: string }) {
         )}
 
         <button
-          onClick={() => { setSent(false); setCode(''); setError(null) }}
+          onClick={() => { setSent(false); setError(null) }}
           className="w-full text-sm text-gray-500 hover:text-gray-700 py-2"
         >
           ← Prøv en anden e-mail
@@ -86,7 +63,7 @@ export default function MagicLinkForm({ next }: { next: string }) {
         disabled={!email.trim() || loading}
         className="w-full px-4 py-3 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 transition-colors disabled:opacity-50"
       >
-        {loading ? 'Sender…' : 'Send login-kode'}
+        {loading ? 'Sender…' : 'Send login-link'}
       </button>
     </div>
   )
