@@ -33,6 +33,8 @@ export default function AddEventForm({
   const [recurringUntil, setRecurringUntil] = useState(editEvent?.recurring?.until ?? '')
 
   const isEdit = !!editEvent
+  const isRecurringSeries = isEdit && !!editEvent?.recurringGroupId
+  const [editScope, setEditScope] = useState<'single' | 'this_and_following' | 'all'>('single')
   const today = defaultDate ?? new Date().toISOString().split('T')[0]
 
   const allPeople = [
@@ -89,6 +91,7 @@ export default function AddEventForm({
 
     const body = {
       ...(isEdit ? { id: editEvent!.id } : {}),
+      ...(isEdit && isRecurringSeries ? { editScope } : {}),
       family_id: familyId,
       user_id: userId,
       managed_member_id: managedMemberId,
@@ -133,6 +136,39 @@ export default function AddEventForm({
       {error && (
         <div className="p-4 bg-red-50 border border-red-100 rounded-2xl text-red-700 text-sm font-medium">
           {error}
+        </div>
+      )}
+
+      {/* Scope picker — only shown when editing a recurring series */}
+      {isRecurringSeries && (
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl px-4 py-4">
+          <p className="text-[11px] font-bold text-amber-600 uppercase tracking-widest mb-3">
+            Rediger gentagende begivenhed
+          </p>
+          <div className="flex flex-col gap-2">
+            {(
+              [
+                { value: 'single',            label: 'Kun denne',              sub: 'Ændrer kun denne ene begivenhed' },
+                { value: 'this_and_following', label: 'Denne og fremtidige',    sub: 'Ændrer fra denne dato og frem' },
+                { value: 'all',               label: 'Alle i serien',          sub: 'Ændrer titel, sted og deltagere på alle' },
+              ] as const
+            ).map((opt) => (
+              <label key={opt.value} className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="radio"
+                  name="editScope"
+                  value={opt.value}
+                  checked={editScope === opt.value}
+                  onChange={() => setEditScope(opt.value)}
+                  className="mt-0.5 accent-amber-500"
+                />
+                <span>
+                  <span className="text-sm font-semibold text-gray-800 block">{opt.label}</span>
+                  <span className="text-xs text-gray-500">{opt.sub}</span>
+                </span>
+              </label>
+            ))}
+          </div>
         </div>
       )}
 

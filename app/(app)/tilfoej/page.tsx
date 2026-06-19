@@ -77,6 +77,9 @@ export default async function TilfoejPage({ searchParams }: Props) {
         endAt: parseISO(row.end_at),
         allDay: row.all_day,
         source: row.source as 'manual' | 'aula',
+        recurring: row.recurring as unknown as import('@/lib/types').RecurringRule | undefined ?? undefined,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        recurringGroupId: (row as any).recurring_group_id ?? null,
         participants: participants.length > 0 ? participants : undefined,
       }
     }

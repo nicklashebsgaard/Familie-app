@@ -31,6 +31,7 @@ export interface CalendarEvent {
   endAt: Date
   allDay: boolean
   recurring?: RecurringRule
+  recurringGroupId?: string | null
   source: EventSource
   aulaUid?: string
   transport?: string
