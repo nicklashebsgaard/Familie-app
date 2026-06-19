@@ -1,22 +1,19 @@
-import { signInWithGoogle, signInWithApple, signInWithMagicLink } from './actions'
+import { signInWithGoogle, signInWithApple } from './actions'
+import MagicLinkForm from './MagicLinkForm'
 
 interface Props {
-  searchParams: { error?: string; message?: string; next?: string }
+  searchParams: { error?: string; next?: string }
 }
 
 export default function LoginPage({ searchParams }: Props) {
   const errorMessages: Record<string, string> = {
     auth_failed: 'Login mislykkedes. Prøv igen.',
     oauth_failed: 'OAuth-login mislykkedes. Prøv igen.',
-    magic_link_failed: 'Kunne ikke sende magic link. Prøv igen.',
+    magic_link_failed: 'Kunne ikke sende login-kode. Prøv igen.',
     email_required: 'Indtast venligst din e-mailadresse.',
   }
 
   const error = searchParams.error ? errorMessages[searchParams.error] : null
-  const message =
-    searchParams.message === 'check_email'
-      ? 'Tjek din e-mail — vi har sendt dig et login-link.'
-      : null
   const next = searchParams.next ?? '/'
 
   return (
@@ -31,12 +28,6 @@ export default function LoginPage({ searchParams }: Props) {
         {error && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
             {error}
-          </div>
-        )}
-
-        {message && (
-          <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm">
-            {message}
           </div>
         )}
 
@@ -81,23 +72,7 @@ export default function LoginPage({ searchParams }: Props) {
             </div>
           </div>
 
-          {/* Magic link */}
-          <form action={signInWithMagicLink} className="space-y-2">
-            <input type="hidden" name="next" value={next} />
-            <input
-              type="email"
-              name="email"
-              placeholder="din@email.dk"
-              required
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-            />
-            <button
-              type="submit"
-              className="w-full px-4 py-3 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 transition-colors"
-            >
-              Send magic link
-            </button>
-          </form>
+          <MagicLinkForm next={next} />
         </div>
       </div>
     </div>

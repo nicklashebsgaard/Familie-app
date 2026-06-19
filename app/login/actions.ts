@@ -42,6 +42,18 @@ export async function signInWithMagicLink(formData: FormData) {
   redirect('/login?message=check_email')
 }
 
+// Called from client component — returns instead of redirecting
+export async function sendLoginCode(email: string, next: string): Promise<{ error?: string }> {
+  if (!email) return { error: 'email_required' }
+  const supabase = createClient()
+  const { error } = await supabase.auth.signInWithOtp({
+    email,
+    options: { emailRedirectTo: `${SITE_URL}/auth/callback?next=${encodeURIComponent(next)}` },
+  })
+  if (error) return { error: error.message }
+  return {}
+}
+
 export async function signOut() {
   const supabase = createClient()
   await supabase.auth.signOut()
