@@ -60,7 +60,7 @@ export default function EventSheet({ event, currentUserId, isAdmin, onClose, onD
       {/* Sheet container — bottom on mobile, centered on desktop */}
       <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center pointer-events-none sm:p-4">
         <div
-          className={`pointer-events-auto w-full sm:max-w-sm bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl overflow-hidden transition-all duration-300 ease-out
+          className={`pointer-events-auto w-full sm:max-w-sm bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl overflow-y-auto sm:overflow-hidden transition-all duration-300 ease-out max-h-[85vh] sm:max-h-none
             ${visible
               ? 'translate-y-0 opacity-100 sm:scale-100'
               : 'translate-y-full opacity-0 sm:translate-y-0 sm:scale-95'
@@ -132,8 +132,8 @@ export default function EventSheet({ event, currentUserId, isAdmin, onClose, onD
           </div>
 
           {/* Actions */}
-          {canEdit && (
-            <div className="px-5 pb-6 pt-1 flex gap-3">
+          {canEdit ? (
+            <div className="px-5 pb-4 pt-1 flex gap-3">
               <a
                 href={`/tilfoej?edit=${event.id}`}
                 className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-2xl border-2 border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
@@ -154,7 +154,11 @@ export default function EventSheet({ event, currentUserId, isAdmin, onClose, onD
                 {confirming ? 'Bekræft sletning' : 'Slet'}
               </button>
             </div>
+          ) : (
+            <div className="pb-2" />
           )}
+          {/* Spacer so content clears the fixed bottom nav on mobile */}
+          <div className="h-16 sm:h-0 flex-shrink-0" />
         </div>
       </div>
     </>
