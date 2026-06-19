@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import { markTokenUsed } from './actions'
 
 const COLORS = [
   { label: 'Indigo', value: '#6366f1' },
@@ -27,32 +28,47 @@ export default function JoinForm({ tokenId, familyId, familyName, defaultName }:
   const [name, setName] = useState(defaultName)
   const [color, setColor] = useState('#ec4899')
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const router = useRouter()
 
   async function handleJoin() {
     if (!name.trim()) return
     setLoading(true)
-    const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) { setLoading(false); return }
+    setError(null)
 
-    // Upsert user profile with name, color and family
-    await supabase.from('users').upsert({
-      id: user.id,
-      email: user.email!,
-      name: name.trim(),
-      color,
-      family_id: familyId,
-      role: 'member',
-    }, { onConflict: 'id' })
+    try {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        setError('Du er ikke logget ind. Prøv at genindlæse siden.')
+        setLoading(false)
+        return
+      }
 
-    // Mark token as used
-    await supabase
-      .from('invite_tokens')
-      .update({ used_at: new Date().toISOString() })
-      .eq('id', tokenId)
+      const { error: upsertError } = await supabase.from('users').upsert({
+        id: user.id,
+        email: user.email!,
+        name: name.trim(),
+        color,
+        family_id: familyId,
+        role: 'member',
+      }, { onConflict: 'id' })
 
-    router.push('/')
+      if (upsertError) {
+        setError('Kunne ikke oprette profil. Prøv igen.')
+        setLoading(false)
+        return
+      }
+
+      // Mark token as used via server action (service role bypasses RLS)
+      await markTokenUsed(tokenId)
+
+      router.push('/')
+      router.refresh()
+    } catch {
+      setError('Noget gik galt. Prøv igen.')
+      setLoading(false)
+    }
   }
 
   return (
@@ -62,6 +78,12 @@ export default function JoinForm({ tokenId, familyId, familyName, defaultName }:
         <h1 className="text-xl font-bold text-gray-900">Bliv en del af {familyName}</h1>
         <p className="text-gray-500 text-sm mt-1">Vælg dit navn og din kalenderfarve</p>
       </div>
+
+      {error && (
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
+          {error}
+        </div>
+      )}
 
       <div className="space-y-5">
         <div>
