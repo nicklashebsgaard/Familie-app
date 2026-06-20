@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/service'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import type { EmailOtpType } from '@supabase/supabase-js'
@@ -20,9 +21,9 @@ export async function GET(request: NextRequest) {
 
   // PKCE flow (OAuth + magic link on same browser)
   if (code) {
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
-    if (!error) {
-      await ensureProfile(supabase)
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code)
+    if (!error && data.user) {
+      await ensureProfile(data.user.id, data.user.email!, data.user.user_metadata?.full_name)
       return redirectTo
     }
     console.error('[auth/callback] exchangeCodeForSession error:', error?.message)
@@ -30,9 +31,9 @@ export async function GET(request: NextRequest) {
 
   // Token hash flow (magic link on different browser/device)
   if (token_hash && type) {
-    const { error } = await supabase.auth.verifyOtp({ type, token_hash })
-    if (!error) {
-      await ensureProfile(supabase)
+    const { data, error } = await supabase.auth.verifyOtp({ type, token_hash })
+    if (!error && data.user) {
+      await ensureProfile(data.user.id, data.user.email!, data.user.user_metadata?.full_name)
       return redirectTo
     }
     console.error('[auth/callback] verifyOtp error:', error?.message)
@@ -42,14 +43,14 @@ export async function GET(request: NextRequest) {
   return NextResponse.redirect(`${origin}/login?error=auth_failed`)
 }
 
-async function ensureProfile(supabase: Awaited<ReturnType<typeof createClient>>) {
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return
-  await supabase.from('users').upsert(
+// Uses service role to bypass RLS — new users have no row yet so RLS blocks their own INSERT
+async function ensureProfile(userId: string, email: string, fullName?: string) {
+  const service = createServiceClient()
+  await service.from('users').upsert(
     {
-      id: user.id,
-      email: user.email!,
-      name: user.user_metadata?.full_name ?? user.email!.split('@')[0],
+      id: userId,
+      email,
+      name: fullName ?? email.split('@')[0],
     },
     { onConflict: 'id', ignoreDuplicates: true }
   )
