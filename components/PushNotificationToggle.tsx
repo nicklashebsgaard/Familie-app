@@ -11,22 +11,13 @@ function urlBase64ToUint8Array(base64String: string) {
 }
 
 async function getActiveRegistration(): Promise<ServiceWorkerRegistration> {
-  // Try existing registration first
-  const existing = await navigator.serviceWorker.getRegistration('/')
-  if (existing?.active) return existing
-
-  // Explicitly register and wait for activation
-  const reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' })
-  if (reg.active) return reg
-
-  return new Promise((resolve, reject) => {
-    const timeout = setTimeout(() => reject(new Error('Service worker ikke klar. Prøv at genstarte appen.')), 20000)
-    const sw = reg.installing ?? reg.waiting
-    if (!sw) { clearTimeout(timeout); resolve(reg); return }
-    sw.addEventListener('statechange', () => {
-      if (reg.active) { clearTimeout(timeout); resolve(reg) }
-    })
-  })
+  const deadline = Date.now() + 30000
+  while (Date.now() < deadline) {
+    const reg = await navigator.serviceWorker.getRegistration('/')
+    if (reg?.active) return reg
+    await new Promise(r => setTimeout(r, 500))
+  }
+  throw new Error('Service worker ikke klar — prøv at lukke appen helt og åbne den igen.')
 }
 
 export default function PushNotificationToggle() {
