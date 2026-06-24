@@ -14,6 +14,8 @@ export interface ParsedEvent {
   managed_member_id: string | null
   participants: string[]
   source: 'aula'
+  feed_id: string
+  feed_label: string
 }
 
 export function parseIcsToEvents(
@@ -21,6 +23,8 @@ export function parseIcsToEvents(
   familyId: string,
   userId: string,
   managedMemberId?: string | null,
+  feedId?: string,
+  feedLabel?: string,
 ): ParsedEvent[] {
   const jcal = ICAL.parse(icsText)
   const comp = new ICAL.Component(jcal)
@@ -34,14 +38,11 @@ export function parseIcsToEvents(
       const startDate = ev.startDate
       const endDate = ev.endDate
 
-      // Skip events without required fields
       if (!ev.uid || !ev.summary || !startDate) continue
 
-      // Convert to JS dates
       const startJs = startDate.toJSDate()
       const endJs = endDate ? endDate.toJSDate() : new Date(startJs.getTime() + 3600000)
 
-      // For all-day events DTEND is exclusive in iCal — keep as-is for storage
       const participant = managedMemberId
         ? `managed:${managedMemberId}`
         : `auth:${userId}`
@@ -58,6 +59,8 @@ export function parseIcsToEvents(
         managed_member_id: managedMemberId ?? null,
         participants: [participant],
         source: 'aula',
+        feed_id: feedId ?? '',
+        feed_label: feedLabel ?? 'Kalender',
       })
     } catch {
       // Skip malformed events

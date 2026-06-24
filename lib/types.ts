@@ -33,6 +33,7 @@ export interface CalendarEvent {
   recurring?: RecurringRule
   recurringGroupId?: string | null
   source: EventSource
+  feedLabel?: string
   aulaUid?: string
   transport?: string
   // The person this event belongs to visually (managed member takes precedence)

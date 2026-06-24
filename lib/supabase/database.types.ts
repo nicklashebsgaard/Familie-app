@@ -108,10 +108,14 @@ export type Database = {
           description: string | null
           end_at: string
           family_id: string
+          feed_id: string | null
+          feed_label: string | null
           id: string
           location: string | null
           managed_member_id: string | null
+          participants: Json
           recurring: Json | null
+          recurring_group_id: string | null
           source: string
           start_at: string
           title: string
@@ -126,10 +130,14 @@ export type Database = {
           description?: string | null
           end_at: string
           family_id: string
+          feed_id?: string | null
+          feed_label?: string | null
           id?: string
           location?: string | null
           managed_member_id?: string | null
+          participants?: Json
           recurring?: Json | null
+          recurring_group_id?: string | null
           source?: string
           start_at: string
           title: string
@@ -144,10 +152,14 @@ export type Database = {
           description?: string | null
           end_at?: string
           family_id?: string
+          feed_id?: string | null
+          feed_label?: string | null
           id?: string
           location?: string | null
           managed_member_id?: string | null
+          participants?: Json
           recurring?: Json | null
+          recurring_group_id?: string | null
           source?: string
           start_at?: string
           title?: string
@@ -164,6 +176,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "events_feed_id_fkey"
+            columns: ["feed_id"]
+            isOneToOne: false
+            referencedRelation: "aula_feeds"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "events_managed_member_id_fkey"
             columns: ["managed_member_id"]
             isOneToOne: false
@@ -175,6 +194,101 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      families: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      guest_links: {
+        Row: {
+          created_at: string | null
+          created_by: string
+          date_from: string | null
+          date_to: string | null
+          expires_at: string
+          family_id: string
+          id: string
+          label: string | null
+          token: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by: string
+          date_from?: string | null
+          date_to?: string | null
+          expires_at: string
+          family_id: string
+          id?: string
+          label?: string | null
+          token?: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string
+          date_from?: string | null
+          date_to?: string | null
+          expires_at?: string
+          family_id?: string
+          id?: string
+          label?: string | null
+          token?: string
+        }
+        Relationships: []
+      }
+      invite_tokens: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          expires_at: string
+          family_id: string
+          id: string
+          token: string
+          used_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string
+          family_id: string
+          id?: string
+          token?: string
+          used_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string
+          family_id?: string
+          id?: string
+          token?: string
+          used_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invite_tokens_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
             referencedColumns: ["id"]
           },
         ]
@@ -210,65 +324,6 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "managed_members_family_id_fkey"
-            columns: ["family_id"]
-            isOneToOne: false
-            referencedRelation: "families"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      families: {
-        Row: {
-          created_at: string
-          created_by: string | null
-          id: string
-          name: string
-        }
-        Insert: {
-          created_at?: string
-          created_by?: string | null
-          id?: string
-          name: string
-        }
-        Update: {
-          created_at?: string
-          created_by?: string | null
-          id?: string
-          name?: string
-        }
-        Relationships: []
-      }
-      invite_tokens: {
-        Row: {
-          created_at: string
-          created_by: string | null
-          expires_at: string
-          family_id: string
-          id: string
-          token: string
-          used_at: string | null
-        }
-        Insert: {
-          created_at?: string
-          created_by?: string | null
-          expires_at?: string
-          family_id: string
-          id?: string
-          token?: string
-          used_at?: string | null
-        }
-        Update: {
-          created_at?: string
-          created_by?: string | null
-          expires_at?: string
-          family_id?: string
-          id?: string
-          token?: string
-          used_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "invite_tokens_family_id_fkey"
             columns: ["family_id"]
             isOneToOne: false
             referencedRelation: "families"

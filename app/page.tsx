@@ -35,6 +35,7 @@ function mapEvent(
     endAt: parseISO(row.end_at as string),
     allDay: row.all_day as boolean,
     source: row.source as 'manual' | 'aula',
+    feedLabel: row.feed_label as string | undefined,
     aulaUid: row.aula_uid as string | undefined,
     transport: row.transport as string | undefined,
     member: membersMap.get(row.user_id as string),

@@ -42,10 +42,10 @@ export async function GET(request: NextRequest) {
         const icsText = await response.text()
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const managedMemberId = (feed as any).managed_member_id ?? null
-        const parsed = parseIcsToEvents(icsText, feed.family_id, feed.user_id, managedMemberId)
+        const parsed = parseIcsToEvents(icsText, feed.family_id, feed.user_id, managedMemberId, feed.id, feed.child_name)
 
         if (parsed.length > 0) {
-          // Upsert events — on conflict (family_id, aula_uid) update title/times
+          // Upsert events — on conflict (family_id, aula_uid) update title/times/label
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const { error: upsertError } = await (supabase.from('events') as any).upsert(
             parsed,
@@ -54,22 +54,19 @@ export async function GET(request: NextRequest) {
           if (upsertError) throw new Error(`Upsert failed: ${upsertError.message}`)
         }
 
-        // Delete events that are no longer in the feed (removed from Aula)
+        // Delete events removed from this specific feed (scoped by feed_id, not user_id)
         const fetchedUids = parsed.map((e) => e.aula_uid)
         if (fetchedUids.length > 0) {
           await supabase
             .from('events')
             .delete()
-            .eq('user_id', feed.user_id)
-            .eq('source', 'aula')
+            .eq('feed_id', feed.id)
             .not('aula_uid', 'in', `(${fetchedUids.map((u) => `"${u}"`).join(',')})`)
         } else {
-          // Feed is empty — delete all aula events for this user
           await supabase
             .from('events')
             .delete()
-            .eq('user_id', feed.user_id)
-            .eq('source', 'aula')
+            .eq('feed_id', feed.id)
         }
 
         // Update sync metadata

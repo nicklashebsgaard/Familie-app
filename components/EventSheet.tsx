@@ -103,7 +103,9 @@ export default function EventSheet({ event, currentUserId, isAdmin, onClose, onD
                   {allParticipants.map((p) => p?.name).filter(Boolean).join(', ') || 'Ukendt'}
                 </p>
                 {event.source === 'aula' && (
-                  <span className="text-xs text-indigo-600 font-semibold">Aula</span>
+                  <span className="text-xs text-indigo-600 font-semibold">
+                    {event.feedLabel ?? 'Kalender'}
+                  </span>
                 )}
               </div>
             </div>
