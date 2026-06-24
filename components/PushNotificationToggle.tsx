@@ -11,14 +11,38 @@ function urlBase64ToUint8Array(base64String: string) {
 }
 
 async function getActiveRegistration(): Promise<ServiceWorkerRegistration> {
-  const deadline = Date.now() + 30000
-  while (Date.now() < deadline) {
-    const regs = await navigator.serviceWorker.getRegistrations()
-    const active = regs.find(r => r.active)
-    if (active) return active
-    await new Promise(r => setTimeout(r, 500))
-  }
-  throw new Error(`Ingen aktiv service worker fundet (${(await navigator.serviceWorker.getRegistrations()).length} registreringer). Prøv at genstarte appen.`)
+  // Explicitly register /sw.js — safe to call even if already registered
+  const reg = await navigator.serviceWorker.register('/sw.js')
+  if (reg.active) return reg
+
+  // SW is installing/waiting — wait for activation (skipWaiting is set so it activates fast)
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(
+      () => reject(new Error('Service worker tog for lang tid. Genindlæs appen og prøv igen.')),
+      15000
+    )
+
+    function checkWorker(worker: ServiceWorker) {
+      if (worker.state === 'activated') {
+        clearTimeout(timeout)
+        resolve(reg)
+      } else if (worker.state === 'redundant') {
+        clearTimeout(timeout)
+        reject(new Error('Service worker fejlede. Genindlæs appen.'))
+      }
+    }
+
+    const worker = reg.installing ?? reg.waiting
+    if (worker) {
+      checkWorker(worker)
+      worker.addEventListener('statechange', () => checkWorker(worker))
+    } else {
+      reg.addEventListener('updatefound', () => {
+        const w = reg.installing!
+        w.addEventListener('statechange', () => checkWorker(w))
+      })
+    }
+  })
 }
 
 export default function PushNotificationToggle() {
@@ -31,11 +55,10 @@ export default function PushNotificationToggle() {
     if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) return
     setSupported(true)
 
-    // Check existing subscription without blocking render
-    navigator.serviceWorker.getRegistrations().then((regs) => {
-      const reg = regs.find(r => r.active)
-      if (reg) reg.pushManager.getSubscription().then((sub) => setSubscribed(!!sub))
-    })
+    // Register SW + check existing subscription on mount
+    navigator.serviceWorker.register('/sw.js').then((reg) => {
+      reg.pushManager?.getSubscription().then((sub) => setSubscribed(!!sub))
+    }).catch(() => {})
   }, [])
 
   async function toggle() {
@@ -43,8 +66,8 @@ export default function PushNotificationToggle() {
     setError(null)
     try {
       if (subscribed) {
-        const reg = await navigator.serviceWorker.getRegistration('/')
-        const sub = await reg?.pushManager.getSubscription()
+        const reg = await navigator.serviceWorker.register('/sw.js')
+        const sub = await reg.pushManager.getSubscription()
         if (sub) {
           await fetch('/api/push/subscribe', {
             method: 'DELETE',
