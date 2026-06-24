@@ -10,7 +10,7 @@
     },
     {
       "path": "/api/push/reminder",
-      "schedule": "*/30 * * * *"
+      "schedule": "0 7 * * *"
     }
   ]
 }
