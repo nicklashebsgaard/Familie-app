@@ -11,8 +11,8 @@ function urlBase64ToUint8Array(base64String: string) {
 }
 
 async function getActiveRegistration(): Promise<ServiceWorkerRegistration> {
-  // Explicitly register /sw.js — safe to call even if already registered
-  const reg = await navigator.serviceWorker.register('/sw.js')
+  // Use a simple push-only SW with no workbox dependencies — committed to git
+  const reg = await navigator.serviceWorker.register('/push-sw.js')
   if (reg.active) return reg
 
   // SW is installing/waiting — wait for activation (skipWaiting is set so it activates fast)
@@ -56,7 +56,7 @@ export default function PushNotificationToggle() {
     setSupported(true)
 
     // Register SW + check existing subscription on mount
-    navigator.serviceWorker.register('/sw.js').then((reg) => {
+    navigator.serviceWorker.register('/push-sw.js').then((reg) => {
       reg.pushManager?.getSubscription().then((sub) => setSubscribed(!!sub))
     }).catch(() => {})
   }, [])
@@ -66,7 +66,7 @@ export default function PushNotificationToggle() {
     setError(null)
     try {
       if (subscribed) {
-        const reg = await navigator.serviceWorker.register('/sw.js')
+        const reg = await navigator.serviceWorker.register('/push-sw.js')
         const sub = await reg.pushManager.getSubscription()
         if (sub) {
           await fetch('/api/push/subscribe', {
