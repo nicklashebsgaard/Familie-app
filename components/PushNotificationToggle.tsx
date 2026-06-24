@@ -30,8 +30,8 @@ export default function PushNotificationToggle() {
     setLoading(true)
     setError(null)
     try {
-      const reg = await navigator.serviceWorker.ready
       if (subscribed) {
+        const reg = await navigator.serviceWorker.ready
         const sub = await reg.pushManager.getSubscription()
         if (sub) {
           await fetch('/api/push/subscribe', {
@@ -43,12 +43,20 @@ export default function PushNotificationToggle() {
           setSubscribed(false)
         }
       } else {
+        // Request permission immediately — iOS requires this directly from user gesture
         const permission = await Notification.requestPermission()
         if (permission === 'denied') {
-          setError('Tilladelse afvist. Gå til telefonens indstillinger og tillad notifikationer for appen.')
+          setError('Tilladelse afvist — gå til Indstillinger → Familie Kalender → Notifikationer og slå til.')
           return
         }
         if (permission !== 'granted') return
+
+        const reg = await Promise.race([
+          navigator.serviceWorker.ready,
+          new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error('Service worker timeout — prøv at genindlæse appen')), 8000)
+          ),
+        ])
 
         const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!
         const sub = await reg.pushManager.subscribe({
@@ -67,7 +75,7 @@ export default function PushNotificationToggle() {
             auth: auth ? btoa(String.fromCharCode(...Array.from(new Uint8Array(auth)))) : '',
           }),
         })
-        if (!res.ok) throw new Error('Kunne ikke gemme abonnement')
+        if (!res.ok) throw new Error('Kunne ikke gemme — prøv igen')
         setSubscribed(true)
       }
     } catch (e) {
