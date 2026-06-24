@@ -1,3 +1,4 @@
+import PushNotificationToggle from '@/components/PushNotificationToggle'
 import { createClient } from '@/lib/supabase/server'
 import {
   updateFamilyName,
@@ -342,6 +343,12 @@ export default async function IndstillingerPage() {
           </form>
         </section>
       )}
+
+      {/* Push notifications */}
+      <section className="space-y-3">
+        <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Notifikationer</h2>
+        <PushNotificationToggle />
+      </section>
 
       {/* Sign out */}
       <section className="pb-4">

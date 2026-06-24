@@ -3,6 +3,14 @@
     {
       "path": "/api/aula/sync",
       "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/push/daily",
+      "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/push/reminder",
+      "schedule": "*/30 * * * *"
     }
   ]
 }
