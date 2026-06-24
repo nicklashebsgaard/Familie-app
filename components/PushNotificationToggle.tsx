@@ -23,16 +23,28 @@ export default function PushNotificationToggle() {
       return
     }
 
-    navigator.serviceWorker.getRegistration('/').then((reg) => {
-      // SW not controlling the page yet — need a reload first
-      if (!reg?.active || !navigator.serviceWorker.controller) {
-        setState('needs-reload')
-        return
-      }
-      reg.pushManager.getSubscription().then((sub) => {
-        setState(sub ? 'subscribed' : 'idle')
+    function checkState() {
+      navigator.serviceWorker.getRegistration('/').then((reg) => {
+        const active = reg?.active ?? null
+        const controlled = !!navigator.serviceWorker.controller
+
+        if (!active && !controlled) {
+          setState('needs-reload')
+          return
+        }
+
+        const registration = reg!
+        registration.pushManager.getSubscription().then((sub) => {
+          setState(sub ? 'subscribed' : 'idle')
+        })
       })
-    })
+    }
+
+    checkState()
+
+    // When SW takes control automatically (e.g. after clientsClaim), re-check
+    navigator.serviceWorker.addEventListener('controllerchange', checkState)
+    return () => navigator.serviceWorker.removeEventListener('controllerchange', checkState)
   }, [])
 
   async function subscribe() {
@@ -47,12 +59,13 @@ export default function PushNotificationToggle() {
       if (permission !== 'granted') return
 
       const reg = await navigator.serviceWorker.getRegistration('/')
-      if (!reg?.active) {
+      const activeReg = reg?.active ? reg : await navigator.serviceWorker.ready.catch(() => null)
+      if (!activeReg) {
         setState('needs-reload')
         return
       }
 
-      const sub = await reg.pushManager.subscribe({
+      const sub = await activeReg.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!),
       })
