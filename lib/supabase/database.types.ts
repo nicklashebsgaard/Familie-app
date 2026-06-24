@@ -39,6 +39,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      event_photos: {
+        Row: {
+          id: string
+          event_id: string
+          family_id: string
+          uploaded_by: string
+          storage_path: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          event_id: string
+          family_id: string
+          uploaded_by: string
+          storage_path: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          event_id?: string
+          family_id?: string
+          uploaded_by?: string
+          storage_path?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
       aula_feeds: {
         Row: {
           child_name: string

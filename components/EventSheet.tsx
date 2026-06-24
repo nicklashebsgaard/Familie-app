@@ -1,11 +1,18 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { format } from 'date-fns'
 import { da } from 'date-fns/locale'
-import { X, Pencil, Trash2, MapPin, Clock, Truck } from 'lucide-react'
+import { X, Pencil, Trash2, MapPin, Clock, Truck, Camera, Loader2 } from 'lucide-react'
 import type { CalendarEvent } from '@/lib/types'
 import Avatar from './Avatar'
+
+interface EventPhoto {
+  id: string
+  url: string
+  storage_path: string
+  uploaded_by: string
+}
 
 interface Props {
   event: CalendarEvent
@@ -19,11 +26,50 @@ export default function EventSheet({ event, currentUserId, isAdmin, onClose, onD
   const [visible, setVisible] = useState(false)
   const [confirming, setConfirming] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [photos, setPhotos] = useState<EventPhoto[]>([])
+  const [uploadingPhoto, setUploadingPhoto] = useState(false)
+  const [lightbox, setLightbox] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     const t = requestAnimationFrame(() => setVisible(true))
     return () => cancelAnimationFrame(t)
   }, [])
+
+  useEffect(() => {
+    fetch(`/api/events/${event.id}/photos`)
+      .then((r) => r.json())
+      .then((data) => { if (Array.isArray(data)) setPhotos(data) })
+      .catch(() => {})
+  }, [event.id])
+
+  async function handlePhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploadingPhoto(true)
+    const form = new FormData()
+    form.append('file', file)
+    try {
+      const res = await fetch(`/api/events/${event.id}/photos`, { method: 'POST', body: form })
+      if (res.ok) {
+        const photo = await res.json()
+        setPhotos((prev) => [...prev, { id: photo.path, url: photo.url, storage_path: photo.path, uploaded_by: '' }])
+        // Refresh to get proper id
+        fetch(`/api/events/${event.id}/photos`)
+          .then((r) => r.json())
+          .then((data) => { if (Array.isArray(data)) setPhotos(data) })
+      }
+    } finally {
+      setUploadingPhoto(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
+
+  async function handlePhotoDelete(photoId: string) {
+    await fetch(`/api/events/${event.id}/photos?photoId=${photoId}`, { method: 'DELETE' })
+    setPhotos((prev) => prev.filter((p) => p.id !== photoId))
+    if (lightbox === photoId) setLightbox(null)
+  }
 
   function close() {
     setVisible(false)
@@ -140,6 +186,86 @@ export default function EventSheet({ event, currentUserId, isAdmin, onClose, onD
               <p className="text-gray-600 leading-relaxed pl-7">{event.description}</p>
             )}
           </div>
+
+          {/* Photos */}
+          {(photos.length > 0 || canEdit) && (
+            <div className="px-5 pb-4">
+              {photos.length > 0 && (
+                <div className="grid grid-cols-3 gap-1.5 mb-3">
+                  {photos.map((photo) => (
+                    <button
+                      key={photo.id}
+                      onClick={() => setLightbox(photo.id)}
+                      className="relative aspect-square rounded-xl overflow-hidden bg-gray-100 group"
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={photo.url} alt="" className="w-full h-full object-cover" />
+                      {canEdit && (
+                        <div className="absolute inset-0 bg-black/0 group-active:bg-black/20 transition-colors" />
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {canEdit && (
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploadingPhoto}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-dashed border-gray-300 text-sm font-medium text-gray-500 hover:border-indigo-400 hover:text-indigo-600 transition-colors disabled:opacity-40"
+                >
+                  {uploadingPhoto
+                    ? <Loader2 size={15} className="animate-spin" />
+                    : <Camera size={15} />
+                  }
+                  {uploadingPhoto ? 'Uploader...' : 'Tilføj billede'}
+                </button>
+              )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                className="hidden"
+                onChange={handlePhotoUpload}
+              />
+            </div>
+          )}
+
+          {/* Lightbox */}
+          {lightbox && (() => {
+            const photo = photos.find((p) => p.id === lightbox)
+            if (!photo) return null
+            return (
+              <div
+                className="fixed inset-0 z-[200] bg-black/90 flex flex-col items-center justify-center p-4"
+                onClick={() => setLightbox(null)}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={photo.url}
+                  alt=""
+                  className="max-w-full max-h-[80vh] object-contain rounded-xl"
+                  onClick={(e) => e.stopPropagation()}
+                />
+                <div className="flex gap-3 mt-4" onClick={(e) => e.stopPropagation()}>
+                  <button
+                    onClick={() => setLightbox(null)}
+                    className="px-5 py-2.5 bg-white/10 text-white rounded-xl text-sm font-semibold"
+                  >
+                    Luk
+                  </button>
+                  {canEdit && (
+                    <button
+                      onClick={() => handlePhotoDelete(photo.id)}
+                      className="px-5 py-2.5 bg-red-500 text-white rounded-xl text-sm font-semibold"
+                    >
+                      Slet
+                    </button>
+                  )}
+                </div>
+              </div>
+            )
+          })()}
 
           {/* Actions */}
           {canEdit ? (
