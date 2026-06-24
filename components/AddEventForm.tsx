@@ -276,7 +276,7 @@ export default function AddEventForm({
       </div>
 
       {/* Gentag */}
-      {!isEdit && (
+      {(!isEdit || editScope === 'this_and_following') && (
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 px-4 py-4">
           <label className="text-xs font-bold text-gray-400 uppercase tracking-widest block mb-3">
             Gentager sig

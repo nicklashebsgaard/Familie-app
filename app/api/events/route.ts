@@ -31,7 +31,8 @@ function expandRecurring(
       start_at: cur.toISOString(),
       end_at: new Date(cur.getTime() + duration).toISOString(),
     })
-    if (rec.freq === 'WEEKLY') cur.setDate(cur.getDate() + 7)
+    if (rec.freq === 'DAILY') cur.setDate(cur.getDate() + 1)
+    else if (rec.freq === 'WEEKLY') cur.setDate(cur.getDate() + 7)
     else if (rec.freq === 'MONTHLY') cur.setMonth(cur.getMonth() + 1)
     else if (rec.freq === 'YEARLY') cur.setFullYear(cur.getFullYear() + 1)
     else break

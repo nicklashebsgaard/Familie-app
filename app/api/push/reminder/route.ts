@@ -24,22 +24,32 @@ export async function GET(request: Request) {
 
   if (!users) return NextResponse.json({ sent: 0 })
 
+  // Fetch events once per unique family (avoids N+1)
+  const uniqueFamilyIds = Array.from(new Set(
+    users.filter((u) => u.family_id && (u.push_subscriptions as unknown[]).length).map((u) => u.family_id!)
+  ))
+  const eventsByFamily = new Map<string, Array<{ title: string; start_at: string }>>()
+  await Promise.all(
+    uniqueFamilyIds.map(async (familyId) => {
+      const { data } = await supabase
+        .from('events')
+        .select('title, start_at')
+        .eq('family_id', familyId)
+        .eq('all_day', false)
+        .gte('start_at', todayStart)
+        .lte('start_at', todayEnd)
+        .order('start_at')
+        .limit(3)
+      if (data?.length) eventsByFamily.set(familyId, data)
+    })
+  )
+
   let sent = 0
   for (const user of users) {
     const subs = (user.push_subscriptions as { endpoint: string; p256dh: string; auth: string }[]) ?? []
     if (!subs.length || !user.family_id) continue
 
-    // Find the first timed event today for this family
-    const { data: events } = await supabase
-      .from('events')
-      .select('title, start_at')
-      .eq('family_id', user.family_id)
-      .eq('all_day', false)
-      .gte('start_at', todayStart)
-      .lte('start_at', todayEnd)
-      .order('start_at')
-      .limit(3)
-
+    const events = eventsByFamily.get(user.family_id)
     if (!events?.length) continue
 
     const lines = events.map((e) => {

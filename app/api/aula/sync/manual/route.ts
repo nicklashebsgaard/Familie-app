@@ -46,7 +46,7 @@ export async function POST() {
       const icsText = await response.text()
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const managedMemberId = (feed as any).managed_member_id ?? null
-      const parsed = parseIcsToEvents(icsText, feed.family_id, feed.user_id, managedMemberId)
+      const parsed = parseIcsToEvents(icsText, feed.family_id, feed.user_id, managedMemberId, feed.id, feed.child_name)
 
       if (parsed.length > 0) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -54,14 +54,19 @@ export async function POST() {
           .upsert(parsed, { onConflict: 'family_id,aula_uid', ignoreDuplicates: false })
       }
 
+      // Delete events removed from this specific feed (scoped by feed_id, matching cron logic)
       const fetchedUids = parsed.map((e) => e.aula_uid)
       if (fetchedUids.length > 0) {
         await serviceClient
           .from('events')
           .delete()
-          .eq('user_id', feed.user_id)
-          .eq('source', 'aula')
+          .eq('feed_id', feed.id)
           .not('aula_uid', 'in', `(${fetchedUids.map((u) => `"${u}"`).join(',')})`)
+      } else {
+        await serviceClient
+          .from('events')
+          .delete()
+          .eq('feed_id', feed.id)
       }
 
       await serviceClient

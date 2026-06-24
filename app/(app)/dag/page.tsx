@@ -22,7 +22,9 @@ export default async function DagPage({ searchParams }: Props) {
   const todayStr = format(new Date(), 'yyyy-MM-dd')
   const dateStr = searchParams.date ?? todayStr
 
-  const viewDate = new Date(dateStr + 'T00:00:00')
+  // T12:00:00 keeps viewDate mid-day so isToday() and format() are safe across timezone boundaries
+  const viewDate = new Date(dateStr + 'T12:00:00')
+  const dayStart = new Date(dateStr + 'T00:00:00')
   const nextDay = new Date(dateStr + 'T00:00:00')
   nextDay.setDate(nextDay.getDate() + 1)
 
@@ -37,7 +39,7 @@ export default async function DagPage({ searchParams }: Props) {
           .from('events')
           .select('*')
           .eq('family_id', profile.family_id)
-          .gte('start_at', viewDate.toISOString())
+          .gte('start_at', dayStart.toISOString())
           .lt('start_at', nextDay.toISOString())
           .order('start_at')
       : { data: [] },
