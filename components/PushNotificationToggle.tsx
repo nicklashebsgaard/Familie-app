@@ -51,16 +51,21 @@ export default function PushNotificationToggle() {
         }
         if (permission !== 'granted') return
 
-        // iOS: serviceWorker.ready can hang if SW isn't controlling the page yet.
-        // Try getRegistration first, then register explicitly, then fall back to ready.
+        // Get or register the service worker, then wait for it to be active
         let reg = await navigator.serviceWorker.getRegistration('/')
         if (!reg) reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' })
-        if (!reg) reg = await Promise.race([
-          navigator.serviceWorker.ready,
-          new Promise<never>((_, reject) =>
-            setTimeout(() => reject(new Error('Service worker ikke klar — genindlæs appen og prøv igen')), 8000)
-          ),
-        ])
+
+        // Wait for the SW to reach active state (iOS requires this before subscribing)
+        if (!reg.active) {
+          await new Promise<void>((resolve, reject) => {
+            const timeout = setTimeout(() => reject(new Error('Service worker aktivering timeout — genindlæs appen')), 15000)
+            const sw = reg!.installing ?? reg!.waiting
+            if (!sw) { clearTimeout(timeout); resolve(); return }
+            sw.addEventListener('statechange', () => {
+              if (sw.state === 'activated') { clearTimeout(timeout); resolve() }
+            })
+          })
+        }
 
         const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!
         const sub = await reg.pushManager.subscribe({
