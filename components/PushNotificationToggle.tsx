@@ -51,10 +51,14 @@ export default function PushNotificationToggle() {
         }
         if (permission !== 'granted') return
 
-        const reg = await Promise.race([
+        // iOS: serviceWorker.ready can hang if SW isn't controlling the page yet.
+        // Try getRegistration first, then register explicitly, then fall back to ready.
+        let reg = await navigator.serviceWorker.getRegistration('/')
+        if (!reg) reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' })
+        if (!reg) reg = await Promise.race([
           navigator.serviceWorker.ready,
           new Promise<never>((_, reject) =>
-            setTimeout(() => reject(new Error('Service worker timeout — prøv at genindlæse appen')), 8000)
+            setTimeout(() => reject(new Error('Service worker ikke klar — genindlæs appen og prøv igen')), 8000)
           ),
         ])
 
