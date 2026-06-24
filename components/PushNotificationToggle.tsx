@@ -13,11 +13,12 @@ function urlBase64ToUint8Array(base64String: string) {
 async function getActiveRegistration(): Promise<ServiceWorkerRegistration> {
   const deadline = Date.now() + 30000
   while (Date.now() < deadline) {
-    const reg = await navigator.serviceWorker.getRegistration('/')
-    if (reg?.active) return reg
+    const regs = await navigator.serviceWorker.getRegistrations()
+    const active = regs.find(r => r.active)
+    if (active) return active
     await new Promise(r => setTimeout(r, 500))
   }
-  throw new Error('Service worker ikke klar — prøv at lukke appen helt og åbne den igen.')
+  throw new Error(`Ingen aktiv service worker fundet (${(await navigator.serviceWorker.getRegistrations()).length} registreringer). Prøv at genstarte appen.`)
 }
 
 export default function PushNotificationToggle() {
@@ -31,10 +32,9 @@ export default function PushNotificationToggle() {
     setSupported(true)
 
     // Check existing subscription without blocking render
-    navigator.serviceWorker.getRegistration('/').then((reg) => {
-      if (reg?.active) {
-        reg.pushManager.getSubscription().then((sub) => setSubscribed(!!sub))
-      }
+    navigator.serviceWorker.getRegistrations().then((regs) => {
+      const reg = regs.find(r => r.active)
+      if (reg) reg.pushManager.getSubscription().then((sub) => setSubscribed(!!sub))
     })
   }, [])
 
