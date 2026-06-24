@@ -10,23 +10,40 @@ function urlBase64ToUint8Array(base64String: string) {
   return Uint8Array.from(Array.from(rawData).map((c) => c.charCodeAt(0)))
 }
 
+async function getActiveRegistration(): Promise<ServiceWorkerRegistration> {
+  // Try existing registration first
+  const existing = await navigator.serviceWorker.getRegistration('/')
+  if (existing?.active) return existing
+
+  // Explicitly register and wait for activation
+  const reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' })
+  if (reg.active) return reg
+
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => reject(new Error('Service worker ikke klar. Prøv at genstarte appen.')), 20000)
+    const sw = reg.installing ?? reg.waiting
+    if (!sw) { clearTimeout(timeout); resolve(reg); return }
+    sw.addEventListener('statechange', () => {
+      if (reg.active) { clearTimeout(timeout); resolve(reg) }
+    })
+  })
+}
+
 export default function PushNotificationToggle() {
-  const [ready, setReady] = useState(false)
   const [supported, setSupported] = useState(false)
   const [subscribed, setSubscribed] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
-      return
-    }
+    if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) return
     setSupported(true)
 
-    // Wait for SW to be active — next-pwa registers it asynchronously via workbox-window
-    navigator.serviceWorker.ready.then((reg) => {
-      setReady(true)
-      reg.pushManager.getSubscription().then((sub) => setSubscribed(!!sub))
+    // Check existing subscription without blocking render
+    navigator.serviceWorker.getRegistration('/').then((reg) => {
+      if (reg?.active) {
+        reg.pushManager.getSubscription().then((sub) => setSubscribed(!!sub))
+      }
     })
   }, [])
 
@@ -34,10 +51,9 @@ export default function PushNotificationToggle() {
     setLoading(true)
     setError(null)
     try {
-      const reg = await navigator.serviceWorker.ready
-
       if (subscribed) {
-        const sub = await reg.pushManager.getSubscription()
+        const reg = await navigator.serviceWorker.getRegistration('/')
+        const sub = await reg?.pushManager.getSubscription()
         if (sub) {
           await fetch('/api/push/subscribe', {
             method: 'DELETE',
@@ -50,10 +66,12 @@ export default function PushNotificationToggle() {
       } else {
         const permission = await Notification.requestPermission()
         if (permission === 'denied') {
-          setError('Gå til Indstillinger → Familie Kalender → Notifikationer og tillad dem.')
+          setError('Tillad notifikationer under Indstillinger → Familie Kalender → Notifikationer.')
           return
         }
         if (permission !== 'granted') return
+
+        const reg = await getActiveRegistration()
 
         const sub = await reg.pushManager.subscribe({
           userVisibleOnly: true,
@@ -82,12 +100,6 @@ export default function PushNotificationToggle() {
 
   if (!supported) return null
 
-  if (!ready) return (
-    <div className="px-4 py-3 rounded-xl bg-gray-50 text-sm text-gray-400 animate-pulse">
-      Indlæser notifikationer…
-    </div>
-  )
-
   return (
     <div className="space-y-2">
       <button
@@ -101,7 +113,7 @@ export default function PushNotificationToggle() {
         }
         <div className="text-left">
           <p className="text-sm font-medium text-gray-900">
-            {subscribed ? 'Notifikationer aktiveret' : 'Aktiver notifikationer'}
+            {loading ? 'Vent…' : subscribed ? 'Notifikationer aktiveret' : 'Aktiver notifikationer'}
           </p>
           <p className="text-xs text-gray-500">
             {subscribed ? 'Tryk for at slå fra' : 'Daglig oversigt kl. 8 + påmindelser kl. 7'}
