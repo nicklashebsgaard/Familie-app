@@ -6,9 +6,8 @@ import {
   startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, addMonths, subMonths,
 } from 'date-fns'
 import { da } from 'date-fns/locale'
-import { ChevronLeft, ChevronRight, Plus, X, Clock } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Plus } from 'lucide-react'
 import type { CalendarEvent, FamilyMember, ManagedMember } from '@/lib/types'
-import Avatar from './Avatar'
 
 interface Props {
   initialEvents: CalendarEvent[]
@@ -16,8 +15,8 @@ interface Props {
   managedMembers: ManagedMember[]
   familyId: string | null
   filteredPersonId: string | null
-  selectedEvent: CalendarEvent | null
-  onSelectEvent: (event: CalendarEvent) => void
+  selectedEvent?: CalendarEvent | null
+  onDayWithEvents: (date: Date, events: CalendarEvent[]) => void
   onMonthChange?: (label: string) => void
 }
 
@@ -27,7 +26,7 @@ const MonthView = forwardRef<HTMLDivElement, Props>(function MonthView({
   managedMembers,
   familyId,
   filteredPersonId,
-  onSelectEvent,
+  onDayWithEvents,
   onMonthChange,
 }, ref) {
   const [currentDate, setCurrentDate] = useState(() => {
@@ -37,8 +36,6 @@ const MonthView = forwardRef<HTMLDivElement, Props>(function MonthView({
   })
   const [events, setEvents] = useState<CalendarEvent[]>(initialEvents)
   const [loading, setLoading] = useState(false)
-  const [daySheet, setDaySheet] = useState<{ date: Date; events: CalendarEvent[] } | null>(null)
-  const [sheetVisible, setSheetVisible] = useState(false)
 
   const membersById = new Map(members.map((m) => [m.id, m]))
   const managedById = new Map(managedMembers.map((m) => [m.id, m]))
@@ -118,23 +115,13 @@ const MonthView = forwardRef<HTMLDivElement, Props>(function MonthView({
     onMonthChange?.(format(next, 'MMMM yyyy', { locale: da }))
   }
 
-  function openDaySheet(date: Date, dayEvents: CalendarEvent[]) {
-    setDaySheet({ date, events: dayEvents })
-    requestAnimationFrame(() => setSheetVisible(true))
-  }
-
-  function closeDaySheet() {
-    setSheetVisible(false)
-    setTimeout(() => setDaySheet(null), 280)
-  }
-
   function handleDayClick(day: Date, dayEvents: CalendarEvent[], dateStr: string) {
     if (!isSameMonth(day, currentDate)) return
     if (dayEvents.length === 0) {
       window.location.href = `/tilfoej?date=${dateStr}`
       return
     }
-    openDaySheet(day, dayEvents)
+    onDayWithEvents(day, dayEvents)
   }
 
   return (
@@ -289,108 +276,6 @@ const MonthView = forwardRef<HTMLDivElement, Props>(function MonthView({
           )
         })}
       </div>
-
-      {/* Day events sheet */}
-      {daySheet && (
-        <>
-          <div
-            className={`fixed inset-0 z-40 bg-black transition-opacity duration-280 ${sheetVisible ? 'opacity-50' : 'opacity-0'}`}
-            onClick={closeDaySheet}
-          />
-          <div className="fixed inset-0 z-50 flex items-end justify-center pointer-events-none">
-            <div
-              className={`pointer-events-auto w-full max-w-lg bg-white rounded-t-3xl shadow-2xl transition-transform duration-280 ease-out max-h-[70vh] flex flex-col ${
-                sheetVisible ? 'translate-y-0' : 'translate-y-full'
-              }`}
-              style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
-            >
-              {/* Handle */}
-              <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
-                <div className="w-10 h-1 bg-gray-300 rounded-full" />
-              </div>
-
-              {/* Header */}
-              <div className="flex items-center justify-between px-5 py-3 flex-shrink-0 border-b border-gray-100">
-                <div>
-                  <p className="text-xs font-bold text-indigo-600 uppercase tracking-widest">
-                    {format(daySheet.date, 'EEEE', { locale: da })}
-                  </p>
-                  <h3 className="text-xl font-bold text-gray-900 capitalize">
-                    {format(daySheet.date, 'd. MMMM', { locale: da })}
-                  </h3>
-                </div>
-                <div className="flex items-center gap-2">
-                  <a
-                    href={`/tilfoej?date=${format(daySheet.date, 'yyyy-MM-dd')}`}
-                    className="flex items-center gap-1.5 px-3 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-xl"
-                  >
-                    <Plus size={14} />
-                    Tilføj
-                  </a>
-                  <button
-                    onClick={closeDaySheet}
-                    className="p-2 rounded-full hover:bg-gray-100 transition-colors"
-                  >
-                    <X size={18} className="text-gray-500" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Event list */}
-              <div className="overflow-y-auto flex-1 px-4 py-3 space-y-2">
-                {daySheet.events.map((event) => {
-                  const ps = event.participants?.length
-                    ? event.participants
-                    : event.member
-                    ? [event.member]
-                    : []
-                  const color = ps.length > 0 && 'color' in ps[0] ? (ps[0] as FamilyMember | ManagedMember).color : '#6366f1'
-                  return (
-                    <button
-                      key={event.id}
-                      onClick={() => { closeDaySheet(); setTimeout(() => onSelectEvent(event), 280) }}
-                      className="w-full text-left flex items-start gap-3 p-3 rounded-2xl bg-gray-50 hover:bg-gray-100 active:bg-gray-200 transition-colors"
-                    >
-                      {/* Color bar */}
-                      <div className="w-1 self-stretch rounded-full flex-shrink-0 mt-0.5" style={{ backgroundColor: color }} />
-
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-gray-900 text-sm leading-snug truncate">{event.title}</p>
-                        <div className="flex items-center gap-1.5 mt-0.5">
-                          <Clock size={11} className="text-gray-400 flex-shrink-0" />
-                          <span className="text-xs text-gray-500">
-                            {event.allDay
-                              ? 'Hele dagen'
-                              : `${format(event.startAt, 'HH:mm')} – ${format(event.endAt, 'HH:mm')}`}
-                          </span>
-                        </div>
-                        {event.location && (
-                          <p className="text-xs text-gray-400 truncate mt-0.5">{event.location}</p>
-                        )}
-                      </div>
-
-                      {/* Participant avatars */}
-                      {ps.length > 0 && (
-                        <div className="flex -space-x-1.5 flex-shrink-0">
-                          {ps.slice(0, 3).map((p, i) => (
-                            <Avatar
-                              key={i}
-                              name={p.name}
-                              color={'color' in p ? p.color : '#6366f1'}
-                              avatarUrl={'avatarUrl' in p ? p.avatarUrl : undefined}
-                              size={24}
-                            />
-                          ))}
-                        </div>
-                      )}
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-          </div>
-        </>
-      )}
     </div>
   )
 })
