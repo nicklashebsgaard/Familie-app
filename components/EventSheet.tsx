@@ -121,7 +121,14 @@ export default function EventSheet({ event, currentUserId, isAdmin, onClose, onD
             </Row>
             {event.location && (
               <Row icon={<MapPin size={17} className="text-gray-400" />}>
-                <span className="text-gray-800">{event.location}</span>
+                <a
+                  href={`https://maps.google.com/?q=${encodeURIComponent(event.location)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-indigo-600 underline underline-offset-2 break-words"
+                >
+                  {event.location}
+                </a>
               </Row>
             )}
             {event.transport && (

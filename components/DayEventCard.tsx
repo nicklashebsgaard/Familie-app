@@ -79,9 +79,16 @@ export default function DayEventCard({ event, participants, color, canEdit }: Pr
         )}
 
         {event.location && (
-          <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
+          <div className="flex items-center gap-2 text-sm mb-2">
             <MapPin size={14} className="flex-shrink-0 text-gray-400" />
-            <span>{event.location}</span>
+            <a
+              href={`https://maps.google.com/?q=${encodeURIComponent(event.location)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-indigo-600 underline underline-offset-2"
+            >
+              {event.location}
+            </a>
           </div>
         )}
 

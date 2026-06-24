@@ -134,6 +134,7 @@ export default function WeeklyCalendar({
 
     if (!familyId) return
     setLoading(true)
+    setEvents([]) // clear so skeletons show immediately
 
     const from = startOfWeek(days[0], { weekStartsOn: 1 }).toISOString()
     const to = endOfWeek(days[6], { weekStartsOn: 1 }).toISOString()
@@ -504,7 +505,7 @@ export default function WeeklyCalendar({
       {/* Day columns */}
       {viewMode === 'week' && <div
         ref={weekGridRef}
-        className={`grid grid-cols-7 gap-1 sm:gap-2 transition-opacity duration-150 ${loading ? 'opacity-40' : 'opacity-100'}`}
+        className="grid grid-cols-7 gap-1 sm:gap-2"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
@@ -551,20 +552,35 @@ export default function WeeklyCalendar({
                 )}
               </div>
 
-              {/* Events + hover add button */}
+              {/* Events + add button */}
               <div className="flex flex-col gap-1.5 sm:gap-2 min-h-[60px] sm:min-h-[80px]">
-                {dayEvents.map((event) => (
-                  <EventPill key={event.id} event={event} onClick={setSelectedEvent} tooltipSide={idx >= 4 ? 'right' : 'left'} />
-                ))}
-                <a
-                  href={`/tilfoej?date=${format(day, 'yyyy-MM-dd')}`}
-                  className="hidden sm:flex items-center justify-center py-0.5 opacity-0 group-hover/day:opacity-100 transition-opacity"
-                  aria-label="Tilføj begivenhed"
-                >
-                  <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-indigo-100 hover:bg-indigo-200 transition-colors">
-                    <Plus size={11} className="text-indigo-600" />
-                  </span>
-                </a>
+                {loading ? (
+                  // Skeleton pills — scattered pattern across the week
+                  [1, 2, 0, 1, 2, 1, 0][idx] > 0
+                    ? Array.from({ length: [1, 2, 0, 1, 2, 1, 0][idx] }).map((_, si) => (
+                        <div
+                          key={si}
+                          className={`rounded-lg bg-gray-200 animate-pulse ${si === 0 ? 'h-7' : 'h-5 opacity-50'}`}
+                        />
+                      ))
+                    : null
+                ) : (
+                  <>
+                    {dayEvents.map((event) => (
+                      <EventPill key={event.id} event={event} onClick={setSelectedEvent} tooltipSide={idx >= 4 ? 'right' : 'left'} />
+                    ))}
+                    {/* Mobile: always visible; Desktop: appear on hover */}
+                    <a
+                      href={`/tilfoej?date=${format(day, 'yyyy-MM-dd')}`}
+                      className="flex items-center justify-center py-0.5 sm:opacity-0 sm:group-hover/day:opacity-100 sm:transition-opacity"
+                      aria-label="Tilføj begivenhed"
+                    >
+                      <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-gray-100 sm:bg-indigo-100 sm:hover:bg-indigo-200 transition-colors">
+                        <Plus size={11} className="text-gray-400 sm:text-indigo-600" />
+                      </span>
+                    </a>
+                  </>
+                )}
               </div>
             </div>
           )
