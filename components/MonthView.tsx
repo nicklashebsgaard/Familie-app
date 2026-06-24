@@ -179,20 +179,15 @@ const MonthView = forwardRef<HTMLDivElement, Props>(function MonthView({
           const inMonth = isSameMonth(day, currentDate)
           const dayEvents = displayedEvents.filter((e) => isSameDay(e.startAt, day))
 
-          // Collect unique colors (max 5 dots)
-          const colors: string[] = []
-          for (const event of dayEvents) {
+          // One dot per event (max 5), colored by primary participant
+          const dots = dayEvents.slice(0, 5).map((event) => {
             const ps = event.participants?.length
               ? event.participants
               : event.member
               ? [event.member]
               : []
-            for (const p of ps) {
-              const c = 'color' in p ? p.color : '#6366f1'
-              if (!colors.includes(c)) colors.push(c)
-            }
-            if (colors.length >= 5) break
-          }
+            return ps[0] && 'color' in ps[0] ? (ps[0] as FamilyMember | ManagedMember).color : '#6366f1'
+          })
 
           // Show up to 2 event titles on larger screens
           const previewEvents = dayEvents.slice(0, 2)
@@ -219,10 +214,10 @@ const MonthView = forwardRef<HTMLDivElement, Props>(function MonthView({
                   {format(day, 'd')}
                 </span>
 
-                {/* Event dots (mobile) */}
-                {colors.length > 0 && (
+                {/* Event dots (mobile) — one dot per event */}
+                {dots.length > 0 && (
                   <div className="flex gap-0.5 flex-wrap justify-center sm:hidden">
-                    {colors.map((color, i) => (
+                    {dots.map((color, i) => (
                       <span
                         key={i}
                         className="w-1.5 h-1.5 rounded-full flex-shrink-0"

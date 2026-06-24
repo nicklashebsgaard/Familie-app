@@ -672,12 +672,17 @@ export default function WeeklyCalendar({
             className={`fixed inset-0 z-[60] bg-black transition-opacity duration-300 ${daySheetVisible ? 'opacity-50' : 'opacity-0'}`}
             onClick={closeDaySheet}
           />
-          <div className="fixed inset-0 z-[70] flex items-end justify-center pointer-events-none">
+          {/* Outer layer is pointer-events-auto + closes on click outside */}
+          <div
+            className="fixed inset-0 z-[70] flex items-end justify-center"
+            onClick={closeDaySheet}
+          >
             <div
-              className={`pointer-events-auto w-full max-w-lg bg-white rounded-t-3xl shadow-2xl transition-transform duration-300 ease-out max-h-[80vh] flex flex-col ${
+              className={`w-full max-w-lg bg-white rounded-t-3xl shadow-2xl transition-transform duration-300 ease-out max-h-[80vh] flex flex-col ${
                 daySheetVisible ? 'translate-y-0' : 'translate-y-full'
               }`}
               style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+              onClick={(e) => e.stopPropagation()}
             >
               {/* Handle */}
               <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
