@@ -559,7 +559,17 @@ export default function WeeklyCalendar({
                     <span className="text-base sm:text-2xl leading-none">{weatherEmoji(w.code)}</span>
                     <span className="text-xs sm:text-sm font-bold text-gray-700 dark:text-gray-300 mt-0.5 leading-none">{w.tempMax}°</span>
                     {w.rain > 0.5 && (
-                      <span className="text-[10px] sm:text-xs font-semibold text-blue-500 leading-none mt-0.5">{w.rain.toFixed(0)}mm</span>
+                      <span
+                        className={`text-[10px] sm:text-xs font-semibold leading-none mt-0.5 ${
+                          w.rain > 8 || w.wind > 40
+                            ? 'text-red-500 dark:text-red-400'
+                            : w.rain > 3
+                            ? 'text-orange-500 dark:text-orange-400'
+                            : 'text-blue-500'
+                        }`}
+                      >
+                        {w.rain.toFixed(0)}mm
+                      </span>
                     )}
                   </>
                 )}
