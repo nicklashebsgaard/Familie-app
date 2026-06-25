@@ -10,6 +10,7 @@ import EventPill from './EventPill'
 import EventSheet from './EventSheet'
 import Avatar from './Avatar'
 import MonthView from './MonthView'
+import ThemeToggleButton from './ThemeToggleButton'
 
 interface WeatherData {
   tempMax: number
@@ -474,6 +475,7 @@ export default function WeeklyCalendar({
               }
             </button>
           )}
+          <ThemeToggleButton />
           <button
             onClick={handleShare}
             disabled={sharing}
