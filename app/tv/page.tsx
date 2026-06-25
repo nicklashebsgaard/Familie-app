@@ -18,7 +18,7 @@ export default async function TVPage() {
 
   const [familyRes, membersRes, managedRes] = await Promise.all([
     supabase.from('families').select('name').eq('id', profile.family_id).single(),
-    supabase.from('users').select('id, name, color, avatar_url').eq('family_id', profile.family_id),
+    supabase.from('users').select('id, name, color, avatar_url, role').eq('family_id', profile.family_id),
     supabase.from('managed_members').select('id, name, color, avatar_url').eq('family_id', profile.family_id),
   ])
 
@@ -34,10 +34,14 @@ export default async function TVPage() {
     .lte('start_at', weekEnd.toISOString())
     .order('start_at')
 
+  const isAdmin = (membersRes.data ?? []).find((m) => m.id === user.id)?.role === 'admin'
+
   return (
     <TVCalendar
       familyId={profile.family_id}
       familyName={familyRes.data?.name ?? 'Familiekalender'}
+      currentUserId={user.id}
+      isAdmin={isAdmin}
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       initialEvents={(events ?? []) as any[]}
       members={membersRes.data ?? []}
