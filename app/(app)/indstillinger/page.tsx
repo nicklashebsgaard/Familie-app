@@ -1,4 +1,5 @@
 import PushNotificationToggle from '@/components/PushNotificationToggle'
+import ThemeSelector from '@/components/ThemeSelector'
 import { createClient } from '@/lib/supabase/server'
 import {
   updateFamilyName,
@@ -346,6 +347,12 @@ export default async function IndstillingerPage() {
         </section>
       )}
 
+      {/* Appearance */}
+      <section className="space-y-3">
+        <h2 className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">Udseende</h2>
+        <ThemeSelector />
+      </section>
+
       {/* Push notifications */}
       <section className="space-y-3">
         <h2 className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">Notifikationer</h2>
@@ -362,6 +369,8 @@ export default async function IndstillingerPage() {
             >
               <option value={7}>Kl. 7:00 (standard)</option>
               <option value={8}>Kl. 8:00</option>
+              <option value={9}>Kl. 9:00</option>
+              <option value={10}>Kl. 10:00</option>
             </select>
             <button
               type="submit"

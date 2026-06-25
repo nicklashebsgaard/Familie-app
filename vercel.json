@@ -5,12 +5,20 @@
       "schedule": "0 6 * * *"
     },
     {
-      "path": "/api/push/daily",
+      "path": "/api/push/morning",
+      "schedule": "0 5 * * *"
+    },
+    {
+      "path": "/api/push/morning",
       "schedule": "0 6 * * *"
     },
     {
-      "path": "/api/push/reminder",
-      "schedule": "0 5 * * *"
+      "path": "/api/push/morning",
+      "schedule": "0 7 * * *"
+    },
+    {
+      "path": "/api/push/morning",
+      "schedule": "0 8 * * *"
     }
   ]
 }

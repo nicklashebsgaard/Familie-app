@@ -208,7 +208,7 @@ export async function deleteManagedMember(formData: FormData): Promise<void> {
 
 export async function updatePushHour(formData: FormData): Promise<void> {
   const rawHour = parseInt(formData.get('push_hour') as string)
-  if (![7, 8].includes(rawHour)) return
+  if (![7, 8, 9, 10].includes(rawHour)) return
 
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
