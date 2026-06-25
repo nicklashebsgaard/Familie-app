@@ -544,14 +544,18 @@ export default function WeeklyCalendar({
                 >
                   {format(day, 'd')}
                 </a>
-                <span className={`text-xs sm:text-sm font-medium block leading-none mt-0.5 ${isToday ? 'text-indigo-500' : 'text-gray-400 dark:text-gray-500'}`}>
-                  {showMonth ? format(day, 'MMM', { locale: da }) : ' '}
+                <span className={`text-xs sm:text-sm font-medium block leading-none mt-0.5 ${
+                  showMonth
+                    ? isToday ? 'text-indigo-500' : 'text-gray-400 dark:text-gray-500'
+                    : 'invisible'
+                }`}>
+                  {format(day, 'MMM', { locale: da })}
                 </span>
               </div>
 
-              {/* Weather strip */}
+              {/* Weather strip — justify-start so emoji always at same Y position across all days */}
               <div
-                className="flex flex-col items-center justify-center mb-2 h-[48px] sm:h-[64px]"
+                className="flex flex-col items-center justify-start pt-1 mb-2 h-[52px] sm:h-[68px]"
                 title={w ? `${w.tempMax}° · ${w.rain.toFixed(1)} mm nedbør · ${w.wind} km/h vind` : ''}
               >
                 {w && (
