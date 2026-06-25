@@ -106,7 +106,7 @@ export default function EventSheet({ event, currentUserId, isAdmin, onClose, onD
       {/* Sheet container — bottom on mobile, centered on desktop */}
       <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center pointer-events-none sm:p-4">
         <div
-          className={`pointer-events-auto w-full sm:max-w-sm bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl overflow-y-auto sm:overflow-hidden transition-all duration-300 ease-out max-h-[85vh] sm:max-h-none
+          className={`pointer-events-auto w-full sm:max-w-sm bg-white dark:bg-gray-800 rounded-t-3xl sm:rounded-2xl shadow-2xl overflow-y-auto sm:overflow-hidden transition-all duration-300 ease-out max-h-[85vh] sm:max-h-none
             ${visible
               ? 'translate-y-0 opacity-100 sm:scale-100'
               : 'translate-y-full opacity-0 sm:translate-y-0 sm:scale-95'
@@ -115,7 +115,7 @@ export default function EventSheet({ event, currentUserId, isAdmin, onClose, onD
         >
           {/* Drag handle (mobile only) */}
           <div className="flex justify-center pt-3 pb-1 sm:hidden">
-            <div className="w-10 h-1 bg-gray-300 rounded-full" />
+            <div className="w-10 h-1 bg-gray-300 dark:bg-gray-600 rounded-full" />
           </div>
 
           {/* Colored header */}
@@ -128,7 +128,7 @@ export default function EventSheet({ event, currentUserId, isAdmin, onClose, onD
               className="absolute top-3 right-3 p-2.5 rounded-full hover:bg-black/10 transition-colors"
               aria-label="Luk"
             >
-              <X size={18} className="text-gray-500" />
+              <X size={18} className="text-gray-500 dark:text-gray-400" />
             </button>
 
             {/* Participants */}
@@ -145,7 +145,7 @@ export default function EventSheet({ event, currentUserId, isAdmin, onClose, onD
                 ))}
               </div>
               <div className="min-w-0">
-                <p className="font-bold text-gray-900 leading-snug truncate">
+                <p className="font-bold text-gray-900 dark:text-white leading-snug truncate">
                   {allParticipants.map((p) => p?.name).filter(Boolean).join(', ') || 'Ukendt'}
                 </p>
                 {event.source === 'aula' && (
@@ -156,17 +156,17 @@ export default function EventSheet({ event, currentUserId, isAdmin, onClose, onD
               </div>
             </div>
 
-            <h2 className="text-2xl font-bold text-gray-900 leading-snug">{event.title}</h2>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white leading-snug">{event.title}</h2>
           </div>
 
           {/* Details */}
           <div className="px-5 py-5 space-y-4">
-            <Row icon={<Clock size={17} className="text-gray-400" />}>
-              <span className="font-semibold text-gray-900 capitalize">{dateStr}</span>
-              <span className="text-gray-500 text-sm">{timeStr}</span>
+            <Row icon={<Clock size={17} className="text-gray-400 dark:text-gray-500" />}>
+              <span className="font-semibold text-gray-900 dark:text-white capitalize">{dateStr}</span>
+              <span className="text-gray-500 dark:text-gray-400 text-sm">{timeStr}</span>
             </Row>
             {event.location && (
-              <Row icon={<MapPin size={17} className="text-gray-400" />}>
+              <Row icon={<MapPin size={17} className="text-gray-400 dark:text-gray-500" />}>
                 <a
                   href={`https://maps.google.com/?q=${encodeURIComponent(event.location)}`}
                   target="_blank"
@@ -178,12 +178,12 @@ export default function EventSheet({ event, currentUserId, isAdmin, onClose, onD
               </Row>
             )}
             {event.transport && (
-              <Row icon={<Truck size={17} className="text-gray-400" />}>
-                <span className="text-gray-800">{event.transport}</span>
+              <Row icon={<Truck size={17} className="text-gray-400 dark:text-gray-500" />}>
+                <span className="text-gray-800 dark:text-gray-200">{event.transport}</span>
               </Row>
             )}
             {event.description && (
-              <p className="text-gray-600 leading-relaxed pl-7">{event.description}</p>
+              <p className="text-gray-600 dark:text-gray-300 leading-relaxed pl-7">{event.description}</p>
             )}
           </div>
 
@@ -196,7 +196,7 @@ export default function EventSheet({ event, currentUserId, isAdmin, onClose, onD
                     <button
                       key={photo.id}
                       onClick={() => setLightbox(photo.id)}
-                      className="relative aspect-square rounded-xl overflow-hidden bg-gray-100 group"
+                      className="relative aspect-square rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-700 group"
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={photo.url} alt="" className="w-full h-full object-cover" />
@@ -211,7 +211,7 @@ export default function EventSheet({ event, currentUserId, isAdmin, onClose, onD
                 <button
                   onClick={() => fileInputRef.current?.click()}
                   disabled={uploadingPhoto}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-dashed border-gray-300 text-sm font-medium text-gray-500 hover:border-indigo-400 hover:text-indigo-600 transition-colors disabled:opacity-40"
+                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-dashed border-gray-300 dark:border-gray-600 text-sm font-medium text-gray-500 dark:text-gray-400 hover:border-indigo-400 hover:text-indigo-600 transition-colors disabled:opacity-40"
                 >
                   {uploadingPhoto
                     ? <Loader2 size={15} className="animate-spin" />
@@ -272,7 +272,7 @@ export default function EventSheet({ event, currentUserId, isAdmin, onClose, onD
             <div className="px-5 pb-4 pt-1 flex gap-3">
               <a
                 href={`/tilfoej?edit=${event.id}`}
-                className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-2xl border-2 border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
+                className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-2xl border-2 border-gray-200 dark:border-gray-600 text-sm font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
               >
                 <Pencil size={15} />
                 Rediger
@@ -283,7 +283,7 @@ export default function EventSheet({ event, currentUserId, isAdmin, onClose, onD
                 className={`flex-1 flex items-center justify-center gap-2 py-3.5 rounded-2xl text-sm font-semibold transition-all ${
                   confirming
                     ? 'bg-red-500 text-white'
-                    : 'border-2 border-gray-200 text-red-500 hover:bg-red-50'
+                    : 'border-2 border-gray-200 dark:border-gray-600 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30'
                 }`}
               >
                 <Trash2 size={15} />

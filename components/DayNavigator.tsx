@@ -48,10 +48,10 @@ export default function DayNavigator({ currentDate, dateLabel, isToday, children
       <div className="flex items-center justify-between mb-5">
         <button
           onClick={() => navigate(shiftDate(currentDate, -1))}
-          className="p-2 rounded-full hover:bg-gray-200 transition-colors"
+          className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
           aria-label="Forrige dag"
         >
-          <ChevronLeft size={22} className="text-gray-600" />
+          <ChevronLeft size={22} className="text-gray-600 dark:text-gray-400" />
         </button>
 
         <div className="text-center">
@@ -60,15 +60,15 @@ export default function DayNavigator({ currentDate, dateLabel, isToday, children
               I dag
             </span>
           )}
-          <h1 className="text-lg font-bold text-gray-900 capitalize">{dateLabel}</h1>
+          <h1 className="text-lg font-bold text-gray-900 dark:text-white capitalize">{dateLabel}</h1>
         </div>
 
         <button
           onClick={() => navigate(shiftDate(currentDate, 1))}
-          className="p-2 rounded-full hover:bg-gray-200 transition-colors"
+          className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
           aria-label="Næste dag"
         >
-          <ChevronRight size={22} className="text-gray-600" />
+          <ChevronRight size={22} className="text-gray-600 dark:text-gray-400" />
         </button>
       </div>
 

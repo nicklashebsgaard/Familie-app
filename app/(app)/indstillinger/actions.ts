@@ -206,6 +206,18 @@ export async function deleteManagedMember(formData: FormData): Promise<void> {
   revalidatePath('/indstillinger')
 }
 
+export async function updatePushHour(formData: FormData): Promise<void> {
+  const rawHour = parseInt(formData.get('push_hour') as string)
+  if (![7, 8].includes(rawHour)) return
+
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return
+
+  await supabase.from('users').update({ push_hour: rawHour }).eq('id', user.id)
+  revalidatePath('/indstillinger')
+}
+
 export async function addAulaFeed(formData: FormData) {
   const childName = formData.get('child_name') as string
   const icsUrl = formData.get('ics_url') as string

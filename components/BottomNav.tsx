@@ -19,7 +19,7 @@ export default function BottomNav() {
   ]
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex z-50 safe-area-bottom">
+    <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 flex z-50 safe-area-bottom">
       {navItems.map(({ href, label, Icon }) => {
         const active = pathname === href || (label === 'I dag' && pathname === '/dag')
         return (
@@ -27,7 +27,7 @@ export default function BottomNav() {
             key={href}
             href={href}
             className={`flex-1 flex flex-col items-center py-2 gap-1 text-xs transition-colors ${
-              active ? 'text-indigo-600' : 'text-gray-500 hover:text-gray-700'
+              active ? 'text-indigo-600' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
             }`}
           >
             <Icon size={20} strokeWidth={active ? 2.5 : 1.5} />

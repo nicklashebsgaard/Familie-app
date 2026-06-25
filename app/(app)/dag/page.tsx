@@ -84,8 +84,8 @@ export default async function DagPage({ searchParams }: Props) {
         {events.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-center">
             <div className="text-6xl mb-4">🎉</div>
-            <p className="text-base font-semibold text-gray-700">Fri dag!</p>
-            <p className="text-sm text-gray-400 mt-1">
+            <p className="text-base font-semibold text-gray-700 dark:text-gray-300">Fri dag!</p>
+            <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">
               Ingen begivenheder {isToday(viewDate) ? 'i dag' : 'denne dag'}
             </p>
           </div>

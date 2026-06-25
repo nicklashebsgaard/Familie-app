@@ -47,18 +47,18 @@ export default function DayEventCard({ event, participants, color, canEdit }: Pr
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
       {/* Color top stripe */}
       <div className="h-1.5" style={{ backgroundColor: color }} />
 
       <div className="p-4 sm:p-5">
         {/* Title + time badge */}
         <div className="flex items-start justify-between gap-3 mb-3">
-          <h3 className="font-bold text-gray-900 text-[17px] sm:text-lg leading-snug flex-1">
+          <h3 className="font-bold text-gray-900 dark:text-white text-[17px] sm:text-lg leading-snug flex-1">
             {event.title}
           </h3>
           {event.all_day ? (
-            <span className="flex-shrink-0 text-xs bg-gray-100 text-gray-500 px-2.5 py-1 rounded-full font-medium">
+            <span className="flex-shrink-0 text-xs bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 px-2.5 py-1 rounded-full font-medium">
               Hele dagen
             </span>
           ) : (
@@ -72,15 +72,15 @@ export default function DayEventCard({ event, participants, color, canEdit }: Pr
         </div>
 
         {startTime && (
-          <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
-            <Clock size={14} className="flex-shrink-0 text-gray-400" />
+          <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-2">
+            <Clock size={14} className="flex-shrink-0 text-gray-400 dark:text-gray-500" />
             <span>{startTime} – {endTime}</span>
           </div>
         )}
 
         {event.location && (
           <div className="flex items-center gap-2 text-sm mb-2">
-            <MapPin size={14} className="flex-shrink-0 text-gray-400" />
+            <MapPin size={14} className="flex-shrink-0 text-gray-400 dark:text-gray-500" />
             <a
               href={`https://maps.google.com/?q=${encodeURIComponent(event.location)}`}
               target="_blank"
@@ -93,34 +93,34 @@ export default function DayEventCard({ event, participants, color, canEdit }: Pr
         )}
 
         {event.transport && (
-          <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
-            <Car size={14} className="flex-shrink-0 text-gray-400" />
+          <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-2">
+            <Car size={14} className="flex-shrink-0 text-gray-400 dark:text-gray-500" />
             <span>{event.transport}</span>
           </div>
         )}
 
         {event.description && (
-          <p className="text-sm text-gray-600 leading-relaxed mb-3">{event.description}</p>
+          <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed mb-3">{event.description}</p>
         )}
 
         {participants.length > 0 && (
-          <div className="flex items-center gap-2 pt-3 border-t border-gray-100 mt-1">
+          <div className="flex items-center gap-2 pt-3 border-t border-gray-100 dark:border-gray-700 mt-1">
             <div className="flex -space-x-1.5">
               {participants.slice(0, 5).map((p, i) => (
                 <Avatar key={i} name={p.name} color={p.color} avatarUrl={p.avatar_url} size={26} />
               ))}
             </div>
-            <span className="text-xs text-gray-500 font-medium truncate">
+            <span className="text-xs text-gray-500 dark:text-gray-400 font-medium truncate">
               {participants.map((p) => p.name).join(', ')}
             </span>
           </div>
         )}
 
         {canEdit && (
-          <div className="flex gap-3 mt-4 pt-3 border-t border-gray-100">
+          <div className="flex gap-3 mt-4 pt-3 border-t border-gray-100 dark:border-gray-700">
             <a
               href={`/tilfoej?edit=${event.id}`}
-              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 text-sm font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
             >
               <Pencil size={14} />
               Rediger
@@ -131,7 +131,7 @@ export default function DayEventCard({ event, participants, color, canEdit }: Pr
               className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all disabled:opacity-50 ${
                 confirming
                   ? 'bg-red-500 text-white'
-                  : 'border border-gray-200 text-red-500 hover:bg-red-50'
+                  : 'border border-gray-200 dark:border-gray-600 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30'
               }`}
             >
               <Trash2 size={14} />

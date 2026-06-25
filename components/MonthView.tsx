@@ -130,14 +130,14 @@ const MonthView = forwardRef<HTMLDivElement, Props>(function MonthView({
       <div className="flex items-center justify-between mb-3 px-1">
         <button
           onClick={() => navigate(-1)}
-          className="p-2 rounded-full hover:bg-gray-200 transition-colors"
+          className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
           aria-label="Forrige måned"
         >
-          <ChevronLeft size={20} className="text-gray-600" />
+          <ChevronLeft size={20} className="text-gray-600 dark:text-gray-400" />
         </button>
 
         <div className="text-center">
-          <h2 className="text-lg font-bold text-gray-900 capitalize">
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white capitalize">
             {monthLabel}
           </h2>
           {!isThisMonth && (
@@ -147,7 +147,7 @@ const MonthView = forwardRef<HTMLDivElement, Props>(function MonthView({
                 setCurrentDate(d)
                 onMonthChange?.(format(d, 'MMMM yyyy', { locale: da }))
               }}
-              className="mt-0.5 text-xs text-indigo-600 font-semibold bg-indigo-50 px-2.5 py-0.5 rounded-full hover:bg-indigo-100 transition-colors inline-block"
+              className="mt-0.5 text-xs text-indigo-600 font-semibold bg-indigo-50 dark:bg-indigo-900/30 px-2.5 py-0.5 rounded-full hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors inline-block"
             >
               I dag ↑
             </button>
@@ -156,24 +156,24 @@ const MonthView = forwardRef<HTMLDivElement, Props>(function MonthView({
 
         <button
           onClick={() => navigate(1)}
-          className="p-2 rounded-full hover:bg-gray-200 transition-colors"
+          className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
           aria-label="Næste måned"
         >
-          <ChevronRight size={20} className="text-gray-600" />
+          <ChevronRight size={20} className="text-gray-600 dark:text-gray-400" />
         </button>
       </div>
 
       {/* Weekday headers */}
       <div className="grid grid-cols-7 mb-1 px-0.5">
         {['Ma', 'Ti', 'On', 'To', 'Fr', 'Lø', 'Sø'].map((d) => (
-          <div key={d} className="text-center text-xs font-bold text-gray-400 uppercase py-1 tracking-wider">
+          <div key={d} className="text-center text-xs font-bold text-gray-400 dark:text-gray-500 uppercase py-1 tracking-wider">
             {d}
           </div>
         ))}
       </div>
 
       {/* Day grid */}
-      <div className="grid grid-cols-7 gap-px bg-gray-100 rounded-2xl overflow-hidden border border-gray-100">
+      <div className="grid grid-cols-7 gap-px bg-gray-100 dark:bg-gray-700 rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-700">
         {days.map((day) => {
           const isToday = isSameDay(day, today)
           const inMonth = isSameMonth(day, currentDate)
@@ -197,18 +197,18 @@ const MonthView = forwardRef<HTMLDivElement, Props>(function MonthView({
           return (
             <div
               key={day.toISOString()}
-              className={`relative bg-white group/day ${!inMonth ? 'opacity-25 pointer-events-none' : ''}`}
+              className={`relative bg-white dark:bg-gray-800 group/day ${!inMonth ? 'opacity-25 pointer-events-none' : ''}`}
             >
               {/* Main cell */}
               <button
                 onClick={() => handleDayClick(day, dayEvents, dateStr)}
                 className={`w-full p-1 sm:p-1.5 min-h-[60px] sm:min-h-[80px] flex flex-col items-center transition-colors ${
-                  inMonth ? 'hover:bg-indigo-50 active:bg-indigo-100' : ''
+                  inMonth ? 'hover:bg-indigo-50 dark:hover:bg-indigo-900/20 active:bg-indigo-100 dark:active:bg-indigo-900/30' : ''
                 }`}
               >
                 <span
                   className={`w-7 h-7 flex items-center justify-center rounded-full text-sm font-semibold mb-0.5 flex-shrink-0 ${
-                    isToday ? 'bg-indigo-600 text-white' : 'text-gray-700'
+                    isToday ? 'bg-indigo-600 text-white' : 'text-gray-700 dark:text-gray-300'
                   }`}
                 >
                   {format(day, 'd')}
@@ -247,7 +247,7 @@ const MonthView = forwardRef<HTMLDivElement, Props>(function MonthView({
                     )
                   })}
                   {dayEvents.length > 2 && (
-                    <span className="text-[10px] text-gray-400 font-medium pl-1">
+                    <span className="text-[10px] text-gray-400 dark:text-gray-500 font-medium pl-1">
                       +{dayEvents.length - 2} mere
                     </span>
                   )}
@@ -262,7 +262,7 @@ const MonthView = forwardRef<HTMLDivElement, Props>(function MonthView({
                   className="absolute top-1 right-1 opacity-0 group-hover/day:opacity-100 transition-opacity"
                   aria-label="Tilføj begivenhed"
                 >
-                  <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-indigo-100 hover:bg-indigo-200 transition-colors">
+                  <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-indigo-100 dark:bg-indigo-900/50 hover:bg-indigo-200 dark:hover:bg-indigo-900/70 transition-colors">
                     <Plus size={11} className="text-indigo-600" />
                   </span>
                 </a>

@@ -17,9 +17,11 @@ export async function GET(request: Request) {
   const todayStart = startOfDay(now).toISOString()
   const todayEnd = endOfDay(now).toISOString()
 
+  // Only send to users who prefer 08:00 CEST (= 06:00 UTC, when this cron runs)
   const { data: users } = await supabase
     .from('users')
     .select('id, name, family_id, push_subscriptions(endpoint, p256dh, auth)')
+    .eq('push_hour', 8)
 
   if (!users) return NextResponse.json({ sent: 0 })
 

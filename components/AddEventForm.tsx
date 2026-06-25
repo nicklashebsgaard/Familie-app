@@ -134,15 +134,15 @@ export default function AddEventForm({
     <form onSubmit={handleSubmit} className="space-y-3 pb-6">
 
       {error && (
-        <div className="p-4 bg-red-50 border border-red-100 rounded-2xl text-red-700 text-sm font-medium">
+        <div className="p-4 bg-red-50 dark:bg-red-900/30 border border-red-100 dark:border-red-900/50 rounded-2xl text-red-700 dark:text-red-400 text-sm font-medium">
           {error}
         </div>
       )}
 
       {/* Scope picker — only shown when editing a recurring series */}
       {isRecurringSeries && (
-        <div className="bg-amber-50 border border-amber-200 rounded-2xl px-4 py-4">
-          <p className="text-[11px] font-bold text-amber-600 uppercase tracking-widest mb-3">
+        <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-2xl px-4 py-4">
+          <p className="text-[11px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-widest mb-3">
             Rediger gentagende begivenhed
           </p>
           <div className="flex flex-col gap-2">
@@ -163,8 +163,8 @@ export default function AddEventForm({
                   className="mt-0.5 accent-amber-500"
                 />
                 <span>
-                  <span className="text-sm font-semibold text-gray-800 block">{opt.label}</span>
-                  <span className="text-xs text-gray-500">{opt.sub}</span>
+                  <span className="text-sm font-semibold text-gray-800 dark:text-gray-200 block">{opt.label}</span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">{opt.sub}</span>
                 </span>
               </label>
             ))}
@@ -173,8 +173,8 @@ export default function AddEventForm({
       )}
 
       {/* Titel */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 px-4 py-4">
-        <label className="text-xs font-bold text-gray-400 uppercase tracking-widest block mb-2">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 px-4 py-4">
+        <label className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest block mb-2">
           Titel <span className="text-red-400">*</span>
         </label>
         <input
@@ -183,14 +183,14 @@ export default function AddEventForm({
           required
           defaultValue={editEvent?.title}
           placeholder="fx Fodboldtræning"
-          className="w-full text-gray-900 text-base placeholder-gray-300 outline-none"
+          className="w-full text-gray-900 dark:text-white bg-transparent text-base placeholder-gray-300 dark:placeholder-gray-600 outline-none"
         />
       </div>
 
       {/* For hvem */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 px-4 py-4">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 px-4 py-4">
         <div className="flex items-center justify-between mb-3">
-          <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">
+          <label className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
             For hvem <span className="text-red-400">*</span>
           </label>
           <button
@@ -210,7 +210,7 @@ export default function AddEventForm({
                 type="button"
                 onClick={() => toggle(p.value)}
                 className={`flex items-center gap-2 px-3 py-2 rounded-full text-sm font-semibold transition-all active:scale-95 ${
-                  active ? 'text-white' : 'bg-gray-100 text-gray-600'
+                  active ? 'text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
                 }`}
                 style={active ? { backgroundColor: p.color } : {}}
               >
@@ -223,11 +223,11 @@ export default function AddEventForm({
       </div>
 
       {/* Hvornår */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 divide-y divide-gray-100">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 divide-y divide-gray-100 dark:divide-gray-700">
 
         {/* Dato */}
         <div className="px-4 py-4">
-          <label className="text-xs font-bold text-gray-400 uppercase tracking-widest block mb-2">
+          <label className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest block mb-2">
             Dato <span className="text-red-400">*</span>
           </label>
           <input
@@ -235,7 +235,7 @@ export default function AddEventForm({
             type="date"
             required
             defaultValue={defaultStartDate}
-            className="w-full text-gray-900 text-base outline-none"
+            className="w-full text-gray-900 dark:text-white bg-transparent text-base outline-none"
           />
         </div>
 
@@ -244,8 +244,8 @@ export default function AddEventForm({
           className="px-4 py-4 flex items-center justify-between cursor-pointer select-none"
           onClick={() => setAllDay((v) => !v)}
         >
-          <span className="text-base text-gray-800 font-medium">Hele dagen</span>
-          <div className={`relative w-12 h-7 rounded-full transition-colors duration-200 ${allDay ? 'bg-indigo-600' : 'bg-gray-200'}`}>
+          <span className="text-base text-gray-800 dark:text-gray-200 font-medium">Hele dagen</span>
+          <div className={`relative w-12 h-7 rounded-full transition-colors duration-200 ${allDay ? 'bg-indigo-600' : 'bg-gray-200 dark:bg-gray-600'}`}>
             <div className={`absolute top-1 w-5 h-5 bg-white rounded-full shadow-sm transition-transform duration-200 ${allDay ? 'left-6' : 'left-1'}`} />
           </div>
         </div>
@@ -254,21 +254,21 @@ export default function AddEventForm({
         {!allDay && (
           <div className="px-4 py-4 grid grid-cols-2 gap-4">
             <div>
-              <label className="text-xs font-bold text-gray-400 uppercase tracking-widest block mb-2">Start</label>
+              <label className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest block mb-2">Start</label>
               <input
                 name="start_time"
                 type="time"
                 defaultValue={defaultStartTime}
-                className="w-full text-gray-900 text-base outline-none"
+                className="w-full text-gray-900 dark:text-white bg-transparent text-base outline-none"
               />
             </div>
             <div>
-              <label className="text-xs font-bold text-gray-400 uppercase tracking-widest block mb-2">Slut</label>
+              <label className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest block mb-2">Slut</label>
               <input
                 name="end_time"
                 type="time"
                 defaultValue={defaultEndTime}
-                className="w-full text-gray-900 text-base outline-none"
+                className="w-full text-gray-900 dark:text-white bg-transparent text-base outline-none"
               />
             </div>
           </div>
@@ -277,8 +277,8 @@ export default function AddEventForm({
 
       {/* Gentag */}
       {(!isEdit || editScope === 'this_and_following') && (
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 px-4 py-4">
-          <label className="text-xs font-bold text-gray-400 uppercase tracking-widest block mb-3">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 px-4 py-4">
+          <label className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest block mb-3">
             Gentager sig
           </label>
           <div className="flex flex-wrap gap-2 mb-3">
@@ -291,7 +291,7 @@ export default function AddEventForm({
                   type="button"
                   onClick={() => setRecurringFreq(freq)}
                   className={`px-3.5 py-2 rounded-xl text-sm font-semibold transition-all active:scale-95 ${
-                    active ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    active ? 'bg-indigo-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                   }`}
                 >
                   {labels[freq]}
@@ -301,7 +301,7 @@ export default function AddEventForm({
           </div>
           {recurringFreq !== 'none' && (
             <div>
-              <label className="text-xs font-bold text-gray-400 uppercase tracking-widest block mb-2">
+              <label className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest block mb-2">
                 Gentag til (valgfrit)
               </label>
               <input
@@ -309,7 +309,7 @@ export default function AddEventForm({
                 value={recurringUntil}
                 onChange={(e) => setRecurringUntil(e.target.value)}
                 min={today}
-                className="w-full text-gray-900 text-base outline-none"
+                className="w-full text-gray-900 dark:text-white bg-transparent text-base outline-none"
               />
             </div>
           )}
@@ -317,35 +317,35 @@ export default function AddEventForm({
       )}
 
       {/* Detaljer */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 divide-y divide-gray-100">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 divide-y divide-gray-100 dark:divide-gray-700">
         <div className="px-4 py-4">
-          <label className="text-xs font-bold text-gray-400 uppercase tracking-widest block mb-2">Sted</label>
+          <label className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest block mb-2">Sted</label>
           <input
             name="location"
             type="text"
             defaultValue={editEvent?.location}
             placeholder="fx Hallen, Skole..."
-            className="w-full text-gray-900 text-base placeholder-gray-300 outline-none"
+            className="w-full text-gray-900 dark:text-white bg-transparent text-base placeholder-gray-300 dark:placeholder-gray-600 outline-none"
           />
         </div>
         <div className="px-4 py-4">
-          <label className="text-xs font-bold text-gray-400 uppercase tracking-widest block mb-2">Kørsel / transport</label>
+          <label className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest block mb-2">Kørsel / transport</label>
           <input
             name="transport"
             type="text"
             defaultValue={editEvent?.transport}
             placeholder="fx Hentes kl. 16:00"
-            className="w-full text-gray-900 text-base placeholder-gray-300 outline-none"
+            className="w-full text-gray-900 dark:text-white bg-transparent text-base placeholder-gray-300 dark:placeholder-gray-600 outline-none"
           />
         </div>
         <div className="px-4 py-4">
-          <label className="text-xs font-bold text-gray-400 uppercase tracking-widest block mb-2">Bemærkninger</label>
+          <label className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest block mb-2">Bemærkninger</label>
           <textarea
             name="description"
             rows={3}
             defaultValue={editEvent?.description}
             placeholder="Valgfri beskrivelse..."
-            className="w-full text-gray-900 text-base placeholder-gray-300 outline-none resize-none"
+            className="w-full text-gray-900 dark:text-white bg-transparent text-base placeholder-gray-300 dark:placeholder-gray-600 outline-none resize-none"
           />
         </div>
       </div>
@@ -363,7 +363,7 @@ export default function AddEventForm({
         <button
           type="button"
           onClick={() => router.back()}
-          className="w-full py-4 border border-gray-200 text-gray-600 rounded-2xl text-base font-medium hover:bg-gray-50 transition-colors"
+          className="w-full py-4 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 rounded-2xl text-base font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
         >
           Annullér
         </button>

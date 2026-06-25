@@ -414,10 +414,10 @@ export default function WeeklyCalendar({
         {viewMode === 'week' ? (
           <button
             onClick={() => setWeekOffset((o) => o - 1)}
-            className="p-2 rounded-full hover:bg-gray-200 transition-colors"
+            className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
             aria-label="Forrige uge"
           >
-            <ChevronLeft size={20} className="text-gray-600" />
+            <ChevronLeft size={20} className="text-gray-600 dark:text-gray-400" />
           </button>
         ) : (
           <div className="w-10" />
@@ -428,11 +428,11 @@ export default function WeeklyCalendar({
             <span className="text-xs sm:text-sm font-semibold text-indigo-600 uppercase tracking-widest block">
               Uge {weekNumber}
             </span>
-            <h1 className="text-lg sm:text-2xl font-bold text-gray-900 leading-tight">{weekLabel}</h1>
+            <h1 className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white leading-tight">{weekLabel}</h1>
             {weekOffset !== 0 && (
               <button
                 onClick={() => setWeekOffset(0)}
-                className="mt-0.5 text-xs text-indigo-600 font-semibold bg-indigo-50 px-2.5 py-0.5 rounded-full hover:bg-indigo-100 transition-colors inline-block"
+                className="mt-0.5 text-xs text-indigo-600 font-semibold bg-indigo-50 dark:bg-indigo-900/30 px-2.5 py-0.5 rounded-full hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors inline-block"
               >
                 I dag ↑
               </button>
@@ -443,11 +443,11 @@ export default function WeeklyCalendar({
 
         <div className="flex items-center gap-0.5">
           {/* View toggle */}
-          <div className="flex bg-gray-100 rounded-full p-0.5 mr-1">
+          <div className="flex bg-gray-100 dark:bg-gray-700 rounded-full p-0.5 mr-1">
             <button
               onClick={() => setViewMode('week')}
               className={`px-2.5 py-1 rounded-full text-xs font-semibold transition-all ${
-                viewMode === 'week' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-500'
+                viewMode === 'week' ? 'bg-white dark:bg-gray-600 text-indigo-600 shadow-sm' : 'text-gray-500 dark:text-gray-400'
               }`}
             >
               Uge
@@ -455,7 +455,7 @@ export default function WeeklyCalendar({
             <button
               onClick={() => setViewMode('month')}
               className={`px-2.5 py-1 rounded-full text-xs font-semibold transition-all ${
-                viewMode === 'month' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-500'
+                viewMode === 'month' ? 'bg-white dark:bg-gray-600 text-indigo-600 shadow-sm' : 'text-gray-500 dark:text-gray-400'
               }`}
             >
               Måned
@@ -465,7 +465,7 @@ export default function WeeklyCalendar({
             <button
               onClick={handleNotification}
               title={notifState === 'subscribed' ? 'Slå notifikationer fra' : 'Aktiver notifikationer'}
-              className="p-2 rounded-full hover:bg-gray-200 transition-colors"
+              className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
               aria-label="Notifikationer"
             >
               {notifState === 'subscribed'
@@ -477,23 +477,23 @@ export default function WeeklyCalendar({
           <button
             onClick={handleShare}
             disabled={sharing}
-            className="p-2 rounded-full hover:bg-gray-200 transition-colors disabled:opacity-40"
+            className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors disabled:opacity-40"
             aria-label="Del uge som billede"
           >
             {sharing
               ? <Loader2 size={18} className="text-gray-500 animate-spin" />
               : shareSuccess
               ? <Check size={18} className="text-green-500" />
-              : <Share2 size={18} className="text-gray-500" />
+              : <Share2 size={18} className="text-gray-500 dark:text-gray-400" />
             }
           </button>
           {viewMode === 'week' && (
             <button
               onClick={() => setWeekOffset((o) => o + 1)}
-              className="p-2 rounded-full hover:bg-gray-200 transition-colors"
+              className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
               aria-label="Næste uge"
             >
-              <ChevronRight size={20} className="text-gray-600" />
+              <ChevronRight size={20} className="text-gray-600 dark:text-gray-400" />
             </button>
           )}
         </div>
@@ -531,19 +531,19 @@ export default function WeeklyCalendar({
 
               {/* Day header */}
               <div className="text-center mb-1">
-                <span className="text-xs sm:text-sm font-semibold text-gray-400 uppercase block leading-none mb-1">
+                <span className="text-xs sm:text-sm font-semibold text-gray-400 dark:text-gray-500 uppercase block leading-none mb-1">
                   {format(day, 'EEE', { locale: da })}
                 </span>
                 <a
                   href={`/dag?date=${format(day, 'yyyy-MM-dd')}`}
                   className={`inline-flex items-center justify-center w-9 h-9 sm:w-12 sm:h-12 rounded-full text-lg sm:text-2xl font-bold transition-colors ${
-                    isToday ? 'bg-indigo-600 text-white' : 'text-gray-900 hover:bg-gray-100 active:bg-gray-200'
+                    isToday ? 'bg-indigo-600 text-white' : 'text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 active:bg-gray-200 dark:active:bg-gray-600'
                   }`}
                 >
                   {format(day, 'd')}
                 </a>
-                <span className={`text-xs sm:text-sm font-medium block leading-none mt-0.5 ${isToday ? 'text-indigo-500' : 'text-gray-400'}`}>
-                  {showMonth ? format(day, 'MMM', { locale: da }) : ' '}
+                <span className={`text-xs sm:text-sm font-medium block leading-none mt-0.5 ${isToday ? 'text-indigo-500' : 'text-gray-400 dark:text-gray-500'}`}>
+                  {showMonth ? format(day, 'MMM', { locale: da }) : ' '}
                 </span>
               </div>
 
@@ -555,7 +555,7 @@ export default function WeeklyCalendar({
                 {w && (
                   <>
                     <span className="text-base sm:text-2xl leading-none">{weatherEmoji(w.code)}</span>
-                    <span className="text-xs sm:text-sm font-bold text-gray-700 mt-0.5 leading-none">{w.tempMax}°</span>
+                    <span className="text-xs sm:text-sm font-bold text-gray-700 dark:text-gray-300 mt-0.5 leading-none">{w.tempMax}°</span>
                     {w.rain > 0.5 && (
                       <span className="text-[10px] sm:text-xs font-semibold text-blue-500 leading-none mt-0.5">{w.rain.toFixed(0)}mm</span>
                     )}
@@ -571,7 +571,7 @@ export default function WeeklyCalendar({
                     ? Array.from({ length: [1, 2, 0, 1, 2, 1, 0][idx] }).map((_, si) => (
                         <div
                           key={si}
-                          className={`rounded-lg bg-gray-200 animate-pulse ${si === 0 ? 'h-7' : 'h-5 opacity-50'}`}
+                          className={`rounded-lg bg-gray-200 dark:bg-gray-700 animate-pulse ${si === 0 ? 'h-7' : 'h-5 opacity-50'}`}
                         />
                       ))
                     : null
@@ -586,7 +586,7 @@ export default function WeeklyCalendar({
                       className="flex items-center justify-center py-0.5 sm:opacity-0 sm:group-hover/day:opacity-100 sm:transition-opacity"
                       aria-label="Tilføj begivenhed"
                     >
-                      <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-gray-100 sm:bg-indigo-100 sm:hover:bg-indigo-200 transition-colors">
+                      <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-gray-100 dark:bg-gray-700 sm:bg-indigo-100 sm:hover:bg-indigo-200 transition-colors">
                         <Plus size={11} className="text-gray-400 sm:text-indigo-600" />
                       </span>
                     </a>
@@ -601,7 +601,7 @@ export default function WeeklyCalendar({
       {/* Empty state */}
       {viewMode === 'week' && !loading && displayedEvents.length === 0 && familyId && (
         <div className="mt-8 text-center">
-          <p className="text-sm text-gray-400 mb-3">
+          <p className="text-sm text-gray-400 dark:text-gray-500 mb-3">
             {filteredPersonId ? 'Ingen begivenheder for denne person' : 'Ingen begivenheder denne uge'}
           </p>
           {!filteredPersonId && (
@@ -639,12 +639,13 @@ export default function WeeklyCalendar({
                     ? 'border-current font-semibold'
                     : isDimmed
                     ? 'border-transparent opacity-30'
-                    : 'border-transparent hover:bg-gray-100'
+                    : 'border-transparent hover:bg-gray-100 dark:hover:bg-gray-700'
                 }`}
-                style={{ color: isSelected ? m.color : isDimmed ? '#9ca3af' : '#4b5563' }}
+                style={{ color: isSelected ? m.color : isDimmed ? '#9ca3af' : undefined }}
+                data-dimmed={isDimmed}
               >
                 <Avatar name={m.name} color={m.color} avatarUrl={m.avatarUrl} size={18} />
-                {m.name}
+                <span className={isSelected || isDimmed ? '' : 'text-gray-600 dark:text-gray-300'}>{m.name}</span>
               </button>
             )
           })}
@@ -678,7 +679,7 @@ export default function WeeklyCalendar({
             onClick={closeDaySheet}
           >
             <div
-              className={`w-full max-w-lg bg-white rounded-t-3xl shadow-2xl transition-transform duration-300 ease-out max-h-[80vh] flex flex-col ${
+              className={`w-full max-w-lg bg-white dark:bg-gray-800 rounded-t-3xl shadow-2xl transition-transform duration-300 ease-out max-h-[80vh] flex flex-col ${
                 daySheetVisible ? 'translate-y-0' : 'translate-y-full'
               }`}
               style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
@@ -686,16 +687,16 @@ export default function WeeklyCalendar({
             >
               {/* Handle */}
               <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
-                <div className="w-10 h-1 bg-gray-300 rounded-full" />
+                <div className="w-10 h-1 bg-gray-300 dark:bg-gray-600 rounded-full" />
               </div>
 
               {/* Header */}
-              <div className="flex items-center justify-between px-5 py-3 flex-shrink-0 border-b border-gray-100">
+              <div className="flex items-center justify-between px-5 py-3 flex-shrink-0 border-b border-gray-100 dark:border-gray-700">
                 <div>
                   <p className="text-xs font-bold text-indigo-600 uppercase tracking-widest capitalize">
                     {format(daySheet.date, 'EEEE', { locale: da })}
                   </p>
-                  <h3 className="text-xl font-bold text-gray-900 capitalize">
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white capitalize">
                     {format(daySheet.date, 'd. MMMM', { locale: da })}
                   </h3>
                 </div>
@@ -709,9 +710,9 @@ export default function WeeklyCalendar({
                   </a>
                   <button
                     onClick={closeDaySheet}
-                    className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+                    className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                   >
-                    <X size={18} className="text-gray-500" />
+                    <X size={18} className="text-gray-500 dark:text-gray-400" />
                   </button>
                 </div>
               </div>
@@ -730,19 +731,19 @@ export default function WeeklyCalendar({
                         closeDaySheet()
                         setTimeout(() => setSelectedEvent(event), 300)
                       }}
-                      className="w-full text-left flex items-center gap-3 p-3 rounded-2xl bg-gray-50 active:bg-gray-100 transition-colors"
+                      className="w-full text-left flex items-center gap-3 p-3 rounded-2xl bg-gray-50 dark:bg-gray-700 active:bg-gray-100 dark:active:bg-gray-600 transition-colors"
                     >
                       <div className="w-1 self-stretch rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
                       <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-gray-900 text-sm truncate">{event.title}</p>
+                        <p className="font-semibold text-gray-900 dark:text-white text-sm truncate">{event.title}</p>
                         <div className="flex items-center gap-1 mt-0.5">
                           <Clock size={11} className="text-gray-400 flex-shrink-0" />
-                          <span className="text-xs text-gray-500">
+                          <span className="text-xs text-gray-500 dark:text-gray-400">
                             {event.allDay ? 'Hele dagen' : `${format(event.startAt, 'HH:mm')} – ${format(event.endAt, 'HH:mm')}`}
                           </span>
                         </div>
                         {event.location && (
-                          <p className="text-xs text-gray-400 truncate mt-0.5">{event.location}</p>
+                          <p className="text-xs text-gray-400 dark:text-gray-500 truncate mt-0.5">{event.location}</p>
                         )}
                       </div>
                       <div className="flex -space-x-1.5 flex-shrink-0">

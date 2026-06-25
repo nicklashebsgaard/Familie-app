@@ -10,6 +10,7 @@ import {
   updateManagedMember,
   deleteManagedMember,
   uploadAvatar,
+  updatePushHour,
 } from './actions'
 import { signOut } from '@/app/login/actions'
 import AvatarUpload from '@/components/AvatarUpload'
@@ -34,11 +35,12 @@ export default async function IndstillingerPage() {
 
   const { data: profile } = await supabase
     .from('users')
-    .select('id, name, family_id, role, color')
+    .select('id, name, family_id, role, color, push_hour')
     .eq('id', user.id)
     .single()
 
   const isAdmin = profile?.role === 'admin'
+  const pushHour = profile?.push_hour ?? 7
 
   const [familyResult, membersResult, managedResult, feedsResult, tokensResult] =
     await Promise.all([
@@ -88,12 +90,12 @@ export default async function IndstillingerPage() {
 
   return (
     <div className="pt-4 space-y-6">
-      <h1 className="text-xl font-bold text-gray-900">Indstillinger</h1>
+      <h1 className="text-xl font-bold text-gray-900 dark:text-white">Indstillinger</h1>
 
       {/* Family name */}
       {isAdmin && (
-        <section className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
+        <section className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
+          <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
             Familie
           </h2>
           <form action={updateFamilyName} className="flex gap-2">
@@ -102,7 +104,7 @@ export default async function IndstillingerPage() {
               type="text"
               defaultValue={family?.name ?? ''}
               placeholder="Familienavn"
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
             <button
               type="submit"
@@ -115,8 +117,8 @@ export default async function IndstillingerPage() {
       )}
 
       {/* Members */}
-      <section className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-        <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
+      <section className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
+        <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
           Familiemedlemmer
         </h2>
         <div className="space-y-3">
@@ -131,8 +133,8 @@ export default async function IndstillingerPage() {
                 uploadAction={uploadAvatar}
               />
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">{m.name}</p>
-                <p className="text-xs text-gray-500">{ROLE_LABELS[m.role] ?? m.role}</p>
+                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{m.name}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">{ROLE_LABELS[m.role] ?? m.role}</p>
               </div>
 
               {/* Color picker (admin or self) */}
@@ -143,7 +145,7 @@ export default async function IndstillingerPage() {
                     type="color"
                     name="color"
                     defaultValue={m.color}
-                    className="w-8 h-8 rounded cursor-pointer border border-gray-200"
+                    className="w-8 h-8 rounded cursor-pointer border border-gray-200 dark:border-gray-600"
                     title="Vælg farve"
                   />
                   <button
@@ -170,8 +172,8 @@ export default async function IndstillingerPage() {
 
       {/* Managed members (children without accounts) */}
       {isAdmin && (
-        <section className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
+        <section className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
+          <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
             Børn (uden login)
           </h2>
 
@@ -187,7 +189,7 @@ export default async function IndstillingerPage() {
                     avatarUrl={m.avatar_url}
                     uploadAction={uploadAvatar}
                   />
-                  <span className="flex-1 text-sm font-medium text-gray-900">{m.name}</span>
+                  <span className="flex-1 text-sm font-medium text-gray-900 dark:text-white">{m.name}</span>
 
                   {/* Inline edit — color */}
                   <form action={updateManagedMember} className="flex gap-1 items-center">
@@ -197,7 +199,7 @@ export default async function IndstillingerPage() {
                       type="color"
                       name="color"
                       defaultValue={m.color}
-                      className="w-8 h-8 rounded cursor-pointer border border-gray-200"
+                      className="w-8 h-8 rounded cursor-pointer border border-gray-200 dark:border-gray-600"
                       title="Skift farve"
                     />
                     <button type="submit" className="text-xs text-indigo-600 hover:underline px-1">
@@ -228,13 +230,13 @@ export default async function IndstillingerPage() {
               type="text"
               placeholder="Barnets navn"
               required
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
             <input
               type="color"
               name="color"
               defaultValue="#22c55e"
-              className="w-10 h-10 rounded cursor-pointer border border-gray-200 flex-shrink-0"
+              className="w-10 h-10 rounded cursor-pointer border border-gray-200 dark:border-gray-600 flex-shrink-0"
               title="Farve"
             />
             <button
@@ -249,8 +251,8 @@ export default async function IndstillingerPage() {
 
       {/* Invitation links */}
       {isAdmin && (
-        <section className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
+        <section className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
+          <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
             Invitationslink
           </h2>
 
@@ -261,7 +263,7 @@ export default async function IndstillingerPage() {
                   <input
                     readOnly
                     value={`${SITE_URL}/join/${t.token}`}
-                    className="flex-1 text-xs px-2 py-1.5 border border-gray-200 rounded bg-gray-50 font-mono truncate"
+                    className="flex-1 text-xs px-2 py-1.5 border border-gray-200 dark:border-gray-600 rounded bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-mono truncate"
                   />
                   <CopyButton text={`${SITE_URL}/join/${t.token}`} />
                 </div>
@@ -272,12 +274,12 @@ export default async function IndstillingerPage() {
           <form action={generateInviteLink}>
             <button
               type="submit"
-              className="w-full py-2 border-2 border-dashed border-indigo-300 text-indigo-600 text-sm rounded-lg hover:bg-indigo-50 transition-colors"
+              className="w-full py-2 border-2 border-dashed border-indigo-300 text-indigo-600 text-sm rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors"
             >
               + Generer nyt invitationslink
             </button>
           </form>
-          <p className="text-xs text-gray-400 mt-1">Links udløber efter 7 dage</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Links udløber efter 7 dage</p>
         </section>
       )}
 
@@ -286,16 +288,16 @@ export default async function IndstillingerPage() {
 
       {/* Aula feeds */}
       {isAdmin && (
-        <section className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
+        <section className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
+          <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
             Aula-kalender
           </h2>
           {feeds.length > 0 && (
             <div className="mb-3 space-y-1">
               {feeds.map((f) => (
                 <div key={f.id} className="flex items-center gap-2 text-sm">
-                  <span className="font-medium text-gray-700">{f.child_name}</span>
-                  <span className="text-gray-400 text-xs truncate flex-1">{f.ics_url}</span>
+                  <span className="font-medium text-gray-700 dark:text-gray-300">{f.child_name}</span>
+                  <span className="text-gray-400 dark:text-gray-500 text-xs truncate flex-1">{f.ics_url}</span>
                 </div>
               ))}
             </div>
@@ -303,7 +305,7 @@ export default async function IndstillingerPage() {
           <form action={addAulaFeed} className="space-y-2">
             <select
               name="user_id"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               required
             >
               <option value="">Vælg barn...</option>
@@ -324,14 +326,14 @@ export default async function IndstillingerPage() {
               name="child_name"
               type="text"
               placeholder="Barnets navn i Aula"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               required
             />
             <input
               name="ics_url"
               type="url"
               placeholder="Aula .ics URL"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-mono bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               required
             />
             <button
@@ -346,8 +348,29 @@ export default async function IndstillingerPage() {
 
       {/* Push notifications */}
       <section className="space-y-3">
-        <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Notifikationer</h2>
+        <h2 className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">Notifikationer</h2>
         <PushNotificationToggle />
+
+        {/* Notification time preference */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 px-4 py-3">
+          <p className="text-sm font-medium text-gray-900 dark:text-white mb-2">Tidspunkt for morgenbesked</p>
+          <form action={updatePushHour} className="flex items-center gap-2">
+            <select
+              name="push_hour"
+              defaultValue={pushHour}
+              className="flex-1 px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            >
+              <option value={7}>Kl. 7:00 (standard)</option>
+              <option value={8}>Kl. 8:00</option>
+            </select>
+            <button
+              type="submit"
+              className="px-4 py-2 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700 whitespace-nowrap"
+            >
+              Gem
+            </button>
+          </form>
+        </div>
       </section>
 
       {/* Sign out */}
@@ -355,7 +378,7 @@ export default async function IndstillingerPage() {
         <form action={signOut}>
           <button
             type="submit"
-            className="w-full py-3 border border-gray-300 text-gray-600 rounded-xl text-sm hover:bg-gray-50 transition-colors"
+            className="w-full py-3 border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 rounded-xl text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
           >
             Log ud
           </button>

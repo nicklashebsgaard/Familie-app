@@ -119,25 +119,25 @@ export default function PushNotificationToggle() {
       <button
         onClick={toggle}
         disabled={loading}
-        className="flex items-center gap-3 w-full px-4 py-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors disabled:opacity-50"
+        className="flex items-center gap-3 w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
       >
         {subscribed
           ? <Bell size={20} className="text-indigo-600 flex-shrink-0" />
           : <BellOff size={20} className="text-gray-400 flex-shrink-0" />
         }
         <div className="text-left">
-          <p className="text-sm font-medium text-gray-900">
+          <p className="text-sm font-medium text-gray-900 dark:text-white">
             {loading ? 'Vent…' : subscribed ? 'Notifikationer aktiveret' : 'Aktiver notifikationer'}
           </p>
-          <p className="text-xs text-gray-500">
-            {subscribed ? 'Tryk for at slå fra' : 'Daglig oversigt kl. 8 + påmindelser kl. 7'}
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            {subscribed ? 'Tryk for at slå fra' : 'Daglig morgenbesked med dagens aftaler'}
           </p>
         </div>
-        <div className={`ml-auto w-10 h-6 rounded-full transition-colors flex-shrink-0 ${subscribed ? 'bg-indigo-600' : 'bg-gray-300'}`}>
+        <div className={`ml-auto w-10 h-6 rounded-full transition-colors flex-shrink-0 ${subscribed ? 'bg-indigo-600' : 'bg-gray-300 dark:bg-gray-600'}`}>
           <div className={`w-4 h-4 bg-white rounded-full mt-1 transition-transform ${subscribed ? 'translate-x-5' : 'translate-x-1'}`} />
         </div>
       </button>
-      {error && <p className="text-xs text-red-600 px-1">{error}</p>}
+      {error && <p className="text-xs text-red-600 dark:text-red-400 px-1">{error}</p>}
     </div>
   )
 }

@@ -16,7 +16,7 @@ export default async function AppShell({
   if (!user) redirect('/login')
 
   return (
-    <div className="min-h-screen bg-gray-50" style={{ paddingBottom: 'calc(4rem + env(safe-area-inset-bottom))' }}>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900" style={{ paddingBottom: 'calc(4rem + env(safe-area-inset-bottom))' }}>
       <main className="max-w-5xl mx-auto px-4">{children}</main>
       <BottomNav />
       <InstallBanner />

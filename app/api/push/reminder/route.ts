@@ -7,7 +7,7 @@ import { da } from 'date-fns/locale'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-// Runs daily at 05:00 UTC = 07:00 CEST / 06:00 CET
+// Runs daily at 05:00 UTC = 07:00 CEST / 06:00 CET — sends to users with push_hour = 7
 export async function GET(request: Request) {
   if (request.headers.get('authorization') !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -21,6 +21,7 @@ export async function GET(request: Request) {
   const { data: users } = await supabase
     .from('users')
     .select('id, name, family_id, push_subscriptions(endpoint, p256dh, auth)')
+    .eq('push_hour', 7)
 
   if (!users) return NextResponse.json({ sent: 0 })
 
