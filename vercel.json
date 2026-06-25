@@ -6,11 +6,11 @@
     },
     {
       "path": "/api/push/daily",
-      "schedule": "0 8 * * *"
+      "schedule": "0 6 * * *"
     },
     {
       "path": "/api/push/reminder",
-      "schedule": "0 7 * * *"
+      "schedule": "0 5 * * *"
     }
   ]
 }

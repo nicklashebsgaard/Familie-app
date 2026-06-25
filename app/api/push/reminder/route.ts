@@ -7,7 +7,7 @@ import { da } from 'date-fns/locale'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-// Runs daily at 7am — sends a reminder for the first event of the day per user
+// Runs daily at 05:00 UTC = 07:00 CEST / 06:00 CET
 export async function GET(request: Request) {
   if (request.headers.get('authorization') !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
