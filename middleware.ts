@@ -42,7 +42,6 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith('/api/aula/sync') ||
     pathname.startsWith('/api/push/morning') ||
     pathname.startsWith('/api/push/weather') ||
-    pathname.startsWith('/api/push/test') ||
     pathname.startsWith('/api/push/daily') ||
     pathname.startsWith('/api/push/reminder') ||
     pathname.startsWith('/g/') ||
