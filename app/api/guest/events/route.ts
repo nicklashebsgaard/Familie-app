@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
   }
   if (link.date_to) {
     // Include events that start before end of date_to
-    query = query.lte('start_at', link.date_to + 'T23:59:59')
+    query = query.lte('start_at', link.date_to + 'T23:59:59+01:00')
   }
 
   const { data: events, error } = await query

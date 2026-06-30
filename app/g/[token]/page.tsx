@@ -114,7 +114,7 @@ export default async function GuestPage({ params }: Params) {
     .order('start_at', { ascending: true })
 
   if (link.date_from) eventsQuery = eventsQuery.gte('start_at', link.date_from)
-  if (link.date_to) eventsQuery = eventsQuery.lte('start_at', link.date_to + 'T23:59:59')
+  if (link.date_to) eventsQuery = eventsQuery.lte('start_at', link.date_to + 'T23:59:59+01:00')
 
   const [eventsRes, membersRes, managedRes] = await Promise.all([
     eventsQuery,

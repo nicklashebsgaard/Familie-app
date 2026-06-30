@@ -1,7 +1,7 @@
 import { createServiceClient } from '@/lib/supabase/service'
 import { sendPushToUser } from '@/lib/webpush'
 import { NextResponse } from 'next/server'
-import { format, startOfDay, endOfDay } from 'date-fns'
+import { format } from 'date-fns'
 import { da } from 'date-fns/locale'
 
 export const runtime = 'nodejs'
@@ -14,8 +14,14 @@ export async function GET(request: Request) {
 
   const supabase = createServiceClient()
   const now = new Date()
-  const todayStart = startOfDay(now).toISOString()
-  const todayEnd = endOfDay(now).toISOString()
+
+  const todayStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Copenhagen' }).format(now)
+  const rangeStart = new Date(todayStr + 'T00:00:00Z')
+  rangeStart.setUTCHours(rangeStart.getUTCHours() - 3)
+  const rangeEnd = new Date(todayStr + 'T23:59:59Z')
+  rangeEnd.setUTCHours(rangeEnd.getUTCHours() + 3)
+  const toCopenhagenDate = (iso: string) =>
+    new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Copenhagen' }).format(new Date(iso))
 
   // Only send to users who prefer 08:00 CEST (= 06:00 UTC, when this cron runs)
   const { data: users } = await supabase
@@ -36,10 +42,11 @@ export async function GET(request: Request) {
         .from('events')
         .select('title, start_at, all_day')
         .eq('family_id', familyId)
-        .gte('start_at', todayStart)
-        .lte('start_at', todayEnd)
+        .gte('start_at', rangeStart.toISOString())
+        .lte('start_at', rangeEnd.toISOString())
         .order('start_at')
-      if (data?.length) eventsByFamily.set(familyId, data)
+      const todayEvents = (data ?? []).filter((e) => toCopenhagenDate(e.start_at) === todayStr)
+      if (todayEvents.length) eventsByFamily.set(familyId, todayEvents)
     })
   )
 

@@ -23,8 +23,11 @@ export default async function TVPage() {
   ])
 
   const now = new Date()
+  // Expand ±3h around UTC week boundaries to catch Copenhagen midnight events (CEST/CET)
   const weekStart = startOfWeek(now, { weekStartsOn: 1 })
+  weekStart.setUTCHours(weekStart.getUTCHours() - 3)
   const weekEnd = endOfWeek(now, { weekStartsOn: 1 })
+  weekEnd.setUTCHours(weekEnd.getUTCHours() + 3)
 
   const { data: events } = await supabase
     .from('events')

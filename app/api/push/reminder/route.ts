@@ -1,7 +1,7 @@
 import { createServiceClient } from '@/lib/supabase/service'
 import { sendPushToUser } from '@/lib/webpush'
 import { NextResponse } from 'next/server'
-import { format, startOfDay, endOfDay } from 'date-fns'
+import { format } from 'date-fns'
 import { da } from 'date-fns/locale'
 
 export const runtime = 'nodejs'
@@ -15,8 +15,14 @@ export async function GET(request: Request) {
 
   const supabase = createServiceClient()
   const now = new Date()
-  const todayStart = startOfDay(now).toISOString()
-  const todayEnd = endOfDay(now).toISOString()
+
+  const todayStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Copenhagen' }).format(now)
+  const rangeStart = new Date(todayStr + 'T00:00:00Z')
+  rangeStart.setUTCHours(rangeStart.getUTCHours() - 3)
+  const rangeEnd = new Date(todayStr + 'T23:59:59Z')
+  rangeEnd.setUTCHours(rangeEnd.getUTCHours() + 3)
+  const toCopenhagenDate = (iso: string) =>
+    new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Copenhagen' }).format(new Date(iso))
 
   const { data: users } = await supabase
     .from('users')
@@ -37,11 +43,12 @@ export async function GET(request: Request) {
         .select('title, start_at')
         .eq('family_id', familyId)
         .eq('all_day', false)
-        .gte('start_at', todayStart)
-        .lte('start_at', todayEnd)
+        .gte('start_at', rangeStart.toISOString())
+        .lte('start_at', rangeEnd.toISOString())
         .order('start_at')
-        .limit(3)
-      if (data?.length) eventsByFamily.set(familyId, data)
+        .limit(10)
+      const todayEvents = (data ?? []).filter((e) => toCopenhagenDate(e.start_at) === todayStr).slice(0, 3)
+      if (todayEvents.length) eventsByFamily.set(familyId, todayEvents)
     })
   )
 
