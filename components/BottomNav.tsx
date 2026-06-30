@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { CalendarDays, Clock, Plus, RefreshCw, Settings } from 'lucide-react'
+import { CalendarDays, Clock, Plus, Rss, Settings } from 'lucide-react'
 import { format } from 'date-fns'
 
 export default function BottomNav() {
@@ -14,7 +14,7 @@ export default function BottomNav() {
     { href: '/',              label: 'Uge',          Icon: CalendarDays },
     { href: todayHref,        label: 'I dag',        Icon: Clock },
     { href: '/tilfoej',       label: 'Tilføj',       Icon: Plus },
-    { href: '/aula',          label: 'Aula',         Icon: RefreshCw },
+    { href: '/aula',          label: 'Feeds',        Icon: Rss },
     { href: '/indstillinger', label: 'Indstillinger', Icon: Settings },
   ]
 

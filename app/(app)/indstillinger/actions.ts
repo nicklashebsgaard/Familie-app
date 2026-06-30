@@ -248,3 +248,40 @@ export async function addAulaFeed(formData: FormData) {
   revalidatePath('/indstillinger')
   revalidatePath('/aula')
 }
+
+export async function updateAulaFeed(feedId: string, childName: string, icsUrl: string) {
+  if (!childName?.trim() || !icsUrl?.trim()) return
+
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return
+
+  const { data: profile } = await supabase
+    .from('users').select('family_id, role').eq('id', user.id).single()
+  if (!profile?.family_id || profile.role !== 'admin') return
+
+  await supabase.from('aula_feeds')
+    .update({ child_name: childName.trim(), ics_url: icsUrl.trim() })
+    .eq('id', feedId)
+    .eq('family_id', profile.family_id)
+
+  revalidatePath('/aula')
+}
+
+export async function deleteAulaFeed(feedId: string) {
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return
+
+  const { data: profile } = await supabase
+    .from('users').select('family_id, role').eq('id', user.id).single()
+  if (!profile?.family_id || profile.role !== 'admin') return
+
+  await supabase.from('aula_feeds')
+    .delete()
+    .eq('id', feedId)
+    .eq('family_id', profile.family_id)
+
+  revalidatePath('/aula')
+  revalidatePath('/indstillinger')
+}
