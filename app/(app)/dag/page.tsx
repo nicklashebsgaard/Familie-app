@@ -24,9 +24,17 @@ export default async function DagPage({ searchParams }: Props) {
 
   // T12:00:00 keeps viewDate mid-day so isToday() and format() are safe across timezone boundaries
   const viewDate = new Date(dateStr + 'T12:00:00')
-  const dayStart = new Date(dateStr + 'T00:00:00')
-  const nextDay = new Date(dateStr + 'T00:00:00')
-  nextDay.setDate(nextDay.getDate() + 1)
+
+  // Fetch a wide ±3h UTC window, then filter in JS by Copenhagen local date.
+  // This handles DST correctly: an event at midnight CEST (= 22:00 UTC prev day)
+  // would be missed by a plain UTC-midnight boundary but is caught by the wide range.
+  const rangeStart = new Date(dateStr + 'T00:00:00Z')
+  rangeStart.setUTCHours(rangeStart.getUTCHours() - 3)
+  const rangeEnd = new Date(dateStr + 'T23:59:59Z')
+  rangeEnd.setUTCHours(rangeEnd.getUTCHours() + 3)
+
+  const toCopenhagenDate = (iso: string) =>
+    new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Copenhagen' }).format(new Date(iso))
 
   const dateLabel = (() => {
     const label = format(viewDate, 'EEEE d. MMMM', { locale: da })
@@ -39,8 +47,8 @@ export default async function DagPage({ searchParams }: Props) {
           .from('events')
           .select('*')
           .eq('family_id', profile.family_id)
-          .gte('start_at', dayStart.toISOString())
-          .lt('start_at', nextDay.toISOString())
+          .gte('start_at', rangeStart.toISOString())
+          .lte('start_at', rangeEnd.toISOString())
           .order('start_at')
       : { data: [] },
     profile?.family_id
@@ -53,7 +61,10 @@ export default async function DagPage({ searchParams }: Props) {
 
   const membersMap = new Map((membersResult.data ?? []).map((m) => [m.id, m]))
   const managedMap = new Map((managedResult.data ?? []).map((m) => [m.id, m]))
-  const events = eventsResult.data ?? []
+  // Filter to only events whose Copenhagen-local date matches the requested date
+  const events = (eventsResult.data ?? []).filter(
+    (e) => toCopenhagenDate(e.start_at) === dateStr
+  )
 
   const isAdmin = (membersResult.data ?? []).find((m) => m.id === user.id)?.role === 'admin'
 
