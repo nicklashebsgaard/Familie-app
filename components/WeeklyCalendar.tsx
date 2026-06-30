@@ -137,7 +137,6 @@ export default function WeeklyCalendar({
 
     if (!familyId) return
     setLoading(true)
-    setEvents([]) // clear so skeletons show immediately
 
     const from = startOfWeek(days[0], { weekStartsOn: 1 }).toISOString()
     const to = endOfWeek(days[6], { weekStartsOn: 1 }).toISOString()
@@ -518,7 +517,7 @@ export default function WeeklyCalendar({
       {/* Day columns */}
       {viewMode === 'week' && <div
         ref={weekGridRef}
-        className="grid grid-cols-7 gap-1 sm:gap-2"
+        className={`grid grid-cols-7 gap-1 sm:gap-2 transition-opacity duration-200 ${loading ? 'opacity-60' : 'opacity-100'}`}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
@@ -582,15 +581,7 @@ export default function WeeklyCalendar({
               {/* Events + add button */}
               <div className="flex flex-col gap-1.5 sm:gap-2 min-h-[60px] sm:min-h-[80px]">
                 {loading ? (
-                  // Skeleton pills — scattered pattern across the week
-                  [1, 2, 0, 1, 2, 1, 0][idx] > 0
-                    ? Array.from({ length: [1, 2, 0, 1, 2, 1, 0][idx] }).map((_, si) => (
-                        <div
-                          key={si}
-                          className={`rounded-lg bg-gray-200 dark:bg-gray-700 animate-pulse ${si === 0 ? 'h-7' : 'h-5 opacity-50'}`}
-                        />
-                      ))
-                    : null
+                  <div className="h-7 rounded-lg bg-gray-200 dark:bg-gray-700 animate-pulse" />
                 ) : (
                   <>
                     {dayEvents.map((event) => (
