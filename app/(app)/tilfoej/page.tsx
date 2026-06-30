@@ -26,10 +26,15 @@ export default async function TilfoejPage({ searchParams }: Props) {
     )
   }
 
-  const [membersRes, managedRes] = await Promise.all([
+  const [membersRes, managedRes, locationsRes] = await Promise.all([
     supabase.from('users').select('id, name, color, role, email, avatar_url').eq('family_id', profile.family_id),
     supabase.from('managed_members').select('id, name, color, family_id, avatar_url').eq('family_id', profile.family_id),
+    supabase.from('events').select('location').eq('family_id', profile.family_id).not('location', 'is', null).neq('location', ''),
   ])
+
+  const locationSuggestions = Array.from(
+    new Set((locationsRes.data ?? []).map((e) => e.location as string).filter(Boolean))
+  ).sort()
 
   const members: FamilyMember[] = (membersRes.data ?? []).map((m) => ({
     id: m.id, name: m.name, color: m.color,
@@ -97,6 +102,7 @@ export default async function TilfoejPage({ searchParams }: Props) {
         currentUserId={user.id}
         editEvent={editEvent}
         defaultDate={searchParams.date}
+        locationSuggestions={locationSuggestions}
       />
     </div>
   )

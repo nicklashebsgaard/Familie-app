@@ -13,6 +13,7 @@ interface Props {
   currentUserId: string
   defaultDate?: string
   editEvent?: CalendarEvent | null
+  locationSuggestions?: string[]
 }
 
 export default function AddEventForm({
@@ -22,6 +23,7 @@ export default function AddEventForm({
   currentUserId,
   defaultDate,
   editEvent,
+  locationSuggestions = [],
 }: Props) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
@@ -323,10 +325,18 @@ export default function AddEventForm({
           <input
             name="location"
             type="text"
+            list="location-suggestions"
             defaultValue={editEvent?.location}
             placeholder="fx Hallen, Skole..."
             className="w-full text-gray-900 dark:text-white bg-transparent text-base placeholder-gray-300 dark:placeholder-gray-600 outline-none"
           />
+          {locationSuggestions.length > 0 && (
+            <datalist id="location-suggestions">
+              {locationSuggestions.map((loc) => (
+                <option key={loc} value={loc} />
+              ))}
+            </datalist>
+          )}
         </div>
         <div className="px-4 py-4">
           <label className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest block mb-2">Kørsel / transport</label>
