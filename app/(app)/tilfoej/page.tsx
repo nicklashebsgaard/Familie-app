@@ -29,7 +29,7 @@ export default async function TilfoejPage({ searchParams }: Props) {
   const [membersRes, managedRes, locationsRes] = await Promise.all([
     supabase.from('users').select('id, name, color, role, email, avatar_url').eq('family_id', profile.family_id),
     supabase.from('managed_members').select('id, name, color, family_id, avatar_url').eq('family_id', profile.family_id),
-    supabase.from('events').select('location').eq('family_id', profile.family_id).not('location', 'is', null).neq('location', ''),
+    supabase.from('events').select('location').eq('family_id', profile.family_id).not('location', 'is', null).neq('location', '').order('created_at', { ascending: false }).limit(300),
   ])
 
   const locationSuggestions = Array.from(
