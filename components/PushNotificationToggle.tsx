@@ -94,7 +94,7 @@ export default function PushNotificationToggle() {
 
         const key = sub.getKey('p256dh')
         const auth = sub.getKey('auth')
-        await fetch('/api/push/subscribe', {
+        const res = await fetch('/api/push/subscribe', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -103,6 +103,7 @@ export default function PushNotificationToggle() {
             auth: auth ? btoa(String.fromCharCode(...Array.from(new Uint8Array(auth)))) : '',
           }),
         })
+        if (!res.ok) throw new Error('Kunne ikke gemme abonnement. Prøv igen.')
         setSubscribed(true)
       }
     } catch (e) {

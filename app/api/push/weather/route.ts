@@ -80,17 +80,22 @@ export async function GET(request: Request) {
   // Fetch all families that have events tomorrow
   const supabase = createServiceClient()
 
-  // Query UTC day range — covers all Danish events (CEST: UTC+2, CET: UTC+1)
-  // Events scheduled e.g. 08:00 CEST = 06:00 UTC, which falls within the UTC day of tomorrowISO
-  const rangeStart = `${tomorrowISO}T00:00:00.000Z`
-  const rangeEnd = `${tomorrowISO}T23:59:59.999Z`
+  // Wide ±3h UTC range, then filter by Copenhagen date in JS (same pattern as dag/page.tsx)
+  const rangeStart = new Date(tomorrowISO + 'T00:00:00Z')
+  rangeStart.setUTCHours(rangeStart.getUTCHours() - 3)
+  const rangeEnd = new Date(tomorrowISO + 'T23:59:59Z')
+  rangeEnd.setUTCHours(rangeEnd.getUTCHours() + 3)
+  const toCopenhagenDate = (iso: string) =>
+    new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Copenhagen' }).format(new Date(iso))
 
-  const { data: events } = await supabase
+  const { data: rawEvents } = await supabase
     .from('events')
     .select('id, title, start_at, all_day, family_id')
-    .gte('start_at', rangeStart)
-    .lte('start_at', rangeEnd)
+    .gte('start_at', rangeStart.toISOString())
+    .lte('start_at', rangeEnd.toISOString())
     .order('start_at')
+
+  const events = (rawEvents ?? []).filter((e) => toCopenhagenDate(e.start_at) === tomorrowISO)
 
   if (!events?.length) {
     return NextResponse.json({ sent: 0, reason: 'ingen events i morgen', tomorrow: tomorrowISO })
@@ -123,6 +128,8 @@ export async function GET(request: Request) {
   }
 
   let sent = 0
+  const allExpired: string[] = []
+
   for (const user of users) {
     const subs = (user.push_subscriptions as { endpoint: string; p256dh: string; auth: string }[]) ?? []
     if (!subs.length || !user.family_id) continue
@@ -133,13 +140,18 @@ export async function GET(request: Request) {
     const eventSummary = lines.slice(0, 3).join(', ')
     const extraCount = lines.length > 3 ? ` +${lines.length - 3} mere` : ''
 
-    await sendPushToUser(subs, {
+    const { expiredEndpoints } = await sendPushToUser(subs, {
       title: `Vejrvarsel for i morgen ⚠️`,
       body: `${eventSummary}${extraCount} — der forventes ${warning}`,
       url: '/',
     })
+    allExpired.push(...expiredEndpoints)
     sent++
   }
 
-  return NextResponse.json({ sent, warning, tomorrow: tomorrowISO, families: byFamily.size })
+  if (allExpired.length) {
+    await supabase.from('push_subscriptions').delete().in('endpoint', allExpired)
+  }
+
+  return NextResponse.json({ sent, warning, tomorrow: tomorrowISO, families: byFamily.size, cleaned: allExpired.length })
 }
