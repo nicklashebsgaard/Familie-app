@@ -121,15 +121,15 @@ export default function GuestLinkManager() {
   const isExpired = (expires_at: string) => new Date(expires_at) < new Date()
 
   return (
-    <section className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+    <section className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
+        <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
           Gæstelinks
         </h2>
         {!showForm && (
           <button
             onClick={() => setShowForm(true)}
-            className="flex items-center gap-1 text-xs text-indigo-600 font-medium hover:text-indigo-700"
+            className="flex items-center gap-1 text-xs text-indigo-600 dark:text-indigo-400 font-medium hover:text-indigo-700"
           >
             <Plus size={14} />
             Nyt link
@@ -138,19 +138,17 @@ export default function GuestLinkManager() {
       </div>
 
       {showForm && (
-        <div className="mb-4 space-y-3 border border-indigo-100 rounded-xl p-3 bg-indigo-50/40">
-          {/* Label */}
+        <div className="mb-4 space-y-3 border border-indigo-100 dark:border-indigo-900/60 rounded-xl p-3 bg-indigo-50/40 dark:bg-indigo-900/20">
           <input
             type="text"
             placeholder="Navn på linket (valgfrit)"
             value={label}
             onChange={(e) => setLabel(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
 
-          {/* Duration */}
           <div>
-            <p className="text-xs font-medium text-gray-500 mb-1.5">Gyldigt i</p>
+            <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Gyldigt i</p>
             <div className="flex flex-wrap gap-2">
               {DURATIONS.map((d) => (
                 <button
@@ -160,7 +158,7 @@ export default function GuestLinkManager() {
                   className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                     durationDays === d.days
                       ? 'bg-indigo-600 text-white'
-                      : 'bg-white border border-gray-200 text-gray-600 hover:border-indigo-300'
+                      : 'bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-indigo-300'
                   }`}
                 >
                   {d.label}
@@ -169,9 +167,8 @@ export default function GuestLinkManager() {
             </div>
           </div>
 
-          {/* Date range */}
           <div>
-            <p className="text-xs font-medium text-gray-500 mb-1.5">Synlige datoer</p>
+            <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Synlige datoer</p>
             <div className="flex flex-wrap gap-2">
               {DATE_RANGES.map((r) => (
                 <button
@@ -181,7 +178,7 @@ export default function GuestLinkManager() {
                   className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                     dateRangeMode === r.value
                       ? 'bg-indigo-600 text-white'
-                      : 'bg-white border border-gray-200 text-gray-600 hover:border-indigo-300'
+                      : 'bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-indigo-300'
                   }`}
                 >
                   {r.label}
@@ -194,15 +191,13 @@ export default function GuestLinkManager() {
                   type="date"
                   value={dateFrom}
                   onChange={(e) => setDateFrom(e.target.value)}
-                  className="flex-1 px-2 py-1.5 border border-gray-300 rounded-lg text-xs"
-                  placeholder="Fra"
+                  className="flex-1 px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-xs bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 />
                 <input
                   type="date"
                   value={dateTo}
                   onChange={(e) => setDateTo(e.target.value)}
-                  className="flex-1 px-2 py-1.5 border border-gray-300 rounded-lg text-xs"
-                  placeholder="Til"
+                  className="flex-1 px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-xs bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 />
               </div>
             )}
@@ -218,7 +213,7 @@ export default function GuestLinkManager() {
             </button>
             <button
               onClick={() => setShowForm(false)}
-              className="px-4 py-2 border border-gray-200 text-gray-600 text-sm rounded-lg hover:bg-gray-50"
+              className="px-4 py-2 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 text-sm rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
             >
               Annuller
             </button>
@@ -227,12 +222,14 @@ export default function GuestLinkManager() {
       )}
 
       {loading ? (
-        <p className="text-sm text-gray-400">Indlæser…</p>
+        <p className="text-sm text-gray-400 dark:text-gray-500">Indlæser…</p>
       ) : links.length === 0 ? (
         <div className="text-center py-4">
-          <Link size={28} className="text-gray-200 mx-auto mb-2" />
-          <p className="text-sm text-gray-400">Ingen gæstelinks endnu</p>
-          <p className="text-xs text-gray-300 mt-0.5">Opret et link og del det med familie eller venner</p>
+          <Link size={28} className="text-gray-200 dark:text-gray-600 mx-auto mb-2" />
+          <p className="text-sm text-gray-400 dark:text-gray-500">Ingen gæstelinks endnu</p>
+          <p className="text-xs text-gray-300 dark:text-gray-600 mt-0.5">
+            Opret et link og del det med familie eller venner
+          </p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -241,15 +238,21 @@ export default function GuestLinkManager() {
             return (
               <div
                 key={link.id}
-                className={`rounded-xl border p-3 ${expired ? 'border-gray-100 bg-gray-50 opacity-60' : 'border-gray-100'}`}
+                className={`rounded-xl border p-3 ${
+                  expired
+                    ? 'border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50 opacity-60'
+                    : 'border-gray-100 dark:border-gray-700'
+                }`}
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-gray-900 truncate">
+                    <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
                       {link.label ?? 'Gæstelink'}
-                      {expired && <span className="ml-1.5 text-xs text-red-400 font-normal">udløbet</span>}
+                      {expired && (
+                        <span className="ml-1.5 text-xs text-red-400 font-normal">udløbet</span>
+                      )}
                     </p>
-                    <p className="text-xs text-gray-400 mt-0.5">
+                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
                       {formatDateRange(link)} · Udløber {formatExpiry(link.expires_at)}
                     </p>
                   </div>
@@ -257,15 +260,19 @@ export default function GuestLinkManager() {
                     {!expired && (
                       <button
                         onClick={() => copyLink(link)}
-                        className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-indigo-600 transition-colors"
+                        className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400 hover:text-indigo-600 transition-colors"
                         title="Kopiér link"
                       >
-                        {copiedId === link.id ? <Check size={15} className="text-green-500" /> : <Copy size={15} />}
+                        {copiedId === link.id ? (
+                          <Check size={15} className="text-green-500" />
+                        ) : (
+                          <Copy size={15} />
+                        )}
                       </button>
                     )}
                     <button
                       onClick={() => handleDelete(link.id)}
-                      className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors"
+                      className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-400 hover:text-red-500 transition-colors"
                       title="Slet"
                     >
                       <Trash2 size={15} />
@@ -277,7 +284,7 @@ export default function GuestLinkManager() {
                     <input
                       readOnly
                       value={`${siteUrl}/g/${link.token}`}
-                      className="flex-1 text-xs px-2 py-1 border border-gray-200 rounded bg-gray-50 font-mono truncate text-gray-500"
+                      className="flex-1 text-xs px-2 py-1 border border-gray-200 dark:border-gray-600 rounded bg-gray-50 dark:bg-gray-700 font-mono truncate text-gray-500 dark:text-gray-400"
                     />
                   </div>
                 )}

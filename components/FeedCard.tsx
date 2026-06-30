@@ -58,23 +58,23 @@ export default function FeedCard({ feed, isAdmin }: { feed: Feed; isAdmin: boole
 
   if (editing) {
     return (
-      <div className="bg-white rounded-xl border border-indigo-200 p-4 shadow-sm">
+      <div className="bg-white dark:bg-gray-800 rounded-xl border border-indigo-200 dark:border-indigo-900/60 p-4 shadow-sm">
         <div className="space-y-2">
           <div>
-            <label className="text-xs font-medium text-gray-500">Navn</label>
+            <label className="text-xs font-medium text-gray-500 dark:text-gray-400">Navn</label>
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full mt-1 px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-300"
+              className="w-full mt-1 px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-300"
             />
           </div>
           <div>
-            <label className="text-xs font-medium text-gray-500">ICS URL</label>
+            <label className="text-xs font-medium text-gray-500 dark:text-gray-400">ICS URL</label>
             <textarea
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               rows={3}
-              className="w-full mt-1 px-3 py-1.5 text-[11px] font-mono border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-300 resize-none"
+              className="w-full mt-1 px-3 py-1.5 text-[11px] font-mono border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-300 resize-none"
             />
           </div>
           <div className="flex gap-2 pt-1">
@@ -88,7 +88,7 @@ export default function FeedCard({ feed, isAdmin }: { feed: Feed; isAdmin: boole
             </button>
             <button
               onClick={() => { setEditing(false); setName(feed.child_name); setUrl(feed.ics_url) }}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-500 border border-gray-200 rounded-lg"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-600 rounded-lg"
             >
               <X size={13} />
               Annuller
@@ -100,20 +100,20 @@ export default function FeedCard({ feed, isAdmin }: { feed: Feed; isAdmin: boole
   }
 
   return (
-    <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
+    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 p-4 shadow-sm">
       <div className="flex items-start gap-2">
         <span className="text-base mt-0.5 flex-shrink-0">{SOURCE_EMOJI[source]}</span>
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="font-medium text-gray-900 text-sm">{feed.child_name}</span>
-                <span className="text-[10px] text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded-full">{source}</span>
+                <span className="font-medium text-gray-900 dark:text-white text-sm">{feed.child_name}</span>
+                <span className="text-[10px] text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded-full">{source}</span>
               </div>
-              <p className="text-[11px] text-gray-400 font-mono truncate mt-0.5 max-w-[200px]">
+              <p className="text-[11px] text-gray-400 dark:text-gray-500 font-mono truncate mt-0.5 max-w-[200px]">
                 {feed.ics_url}
               </p>
-              <div className="flex flex-wrap gap-3 text-xs text-gray-400 mt-1.5">
+              <div className="flex flex-wrap gap-3 text-xs text-gray-400 dark:text-gray-500 mt-1.5">
                 {syncedAt && (
                   <span className="flex items-center gap-1">
                     <RefreshCw size={10} />
@@ -133,13 +133,13 @@ export default function FeedCard({ feed, isAdmin }: { feed: Feed; isAdmin: boole
               ) : hasSynced ? (
                 <CheckCircle size={15} className="text-green-400 mr-0.5" />
               ) : (
-                <Clock size={15} className="text-gray-300 mr-0.5" />
+                <Clock size={15} className="text-gray-300 dark:text-gray-600 mr-0.5" />
               )}
               {isAdmin && (
                 <>
                   <button
                     onClick={() => setEditing(true)}
-                    className="p-1.5 text-gray-400 hover:text-indigo-600 rounded-lg hover:bg-indigo-50 transition-colors"
+                    className="p-1.5 text-gray-400 hover:text-indigo-600 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors"
                   >
                     <Pencil size={14} />
                   </button>
@@ -154,7 +154,7 @@ export default function FeedCard({ feed, isAdmin }: { feed: Feed; isAdmin: boole
                       </button>
                       <button
                         onClick={() => setConfirmDelete(false)}
-                        className="px-2 py-1 text-[11px] font-medium text-gray-500 border border-gray-200 rounded-lg"
+                        className="px-2 py-1 text-[11px] font-medium text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-600 rounded-lg"
                       >
                         Nej
                       </button>
@@ -162,7 +162,7 @@ export default function FeedCard({ feed, isAdmin }: { feed: Feed; isAdmin: boole
                   ) : (
                     <button
                       onClick={() => setConfirmDelete(true)}
-                      className="p-1.5 text-gray-400 hover:text-red-500 rounded-lg hover:bg-red-50 transition-colors"
+                      className="p-1.5 text-gray-400 hover:text-red-500 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                     >
                       <Trash2 size={14} />
                     </button>
@@ -172,7 +172,7 @@ export default function FeedCard({ feed, isAdmin }: { feed: Feed; isAdmin: boole
             </div>
           </div>
           {hasError && (
-            <div className="mt-2 p-2 bg-red-50 rounded-lg text-xs text-red-600">
+            <div className="mt-2 p-2 bg-red-50 dark:bg-red-900/20 rounded-lg text-xs text-red-600 dark:text-red-400">
               {feed.last_error}
             </div>
           )}
